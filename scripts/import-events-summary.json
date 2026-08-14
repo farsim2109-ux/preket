@@ -1,0 +1,902 @@
+[
+  {
+    "title": "Will Oprah Winfrey win the 2028 Democratic presidential nomination?",
+    "description": "This market will resolve to “Yes” if the named individual wins and accepts the 2028 nomination of the Democratic Party for U.S. president. Otherwise, this market will resolve to “No”. The resolution source for this market will be a consensus of official Democratic Party sources. Any replacement of the democratic nominee before election day will not change the resolution of the market.",
+    "category": "politics",
+    "yesPool": 271151.09,
+    "noPool": 26843958.02,
+    "cpmmRy": 271651.09,
+    "cpmmRn": 26844458.02
+  },
+  {
+    "title": "Will Byron Donalds win the 2028 Republican presidential nomination?",
+    "description": "This market will resolve to “Yes” if the named individual wins and accepts the 2028 nomination of the Republican Party for U.S. president. Otherwise, this market will resolve to “No”. The resolution source for this market will be a consensus of official Republican Party sources. Any replacement of the Republican nominee before election day will not change the resolution of the market.",
+    "category": "politics",
+    "yesPool": 221903.64,
+    "noPool": 21968460.15,
+    "cpmmRy": 222403.64,
+    "cpmmRn": 21968960.15
+  },
+  {
+    "title": "Will LeBron James win the 2028 US Presidential Election?",
+    "description": "The 2028 US Presidential Election is scheduled to take place on November 7, 2028. This market will resolve to the person who wins the 2028 US Presidential Election. The resolution source for this market is the Associated Press, Fox News, and NBC. This market will resolve once all three sources call the race for the same candidate. If all three sources haven’t called the race for the same candidate by the inauguration date (January 20, 2029) this market will resolve based on who is inaugurated.",
+    "category": "politics",
+    "yesPool": 272516.71,
+    "noPool": 26979154.08,
+    "cpmmRy": 273016.71,
+    "cpmmRn": 26979654.08
+  },
+  {
+    "title": "Will Adanech Abiebie be the next Prime Minister of Ethiopia?",
+    "description": "General elections are scheduled to be held in Ethiopia on June 1, 2026. This market will resolve to the next individual who officially assumes the office of Prime Minister of Ethiopia following the 2026 General elections. To count for resolution, the individual must be officially appointed and sworn in as Prime Minister of Ethiopia. Any interim or caretaker Prime Minister will not count toward the resolution of this market. If no such Prime Minister takes office by December 31, 2028, 11:59 PM ET",
+    "category": "politics",
+    "yesPool": 390376.43,
+    "noPool": 38647266.99,
+    "cpmmRy": 390876.43,
+    "cpmmRn": 38647766.99
+  },
+  {
+    "title": "Will Oliver Bearman be the 2026 F1 Drivers'' Champion?",
+    "description": "This market will resolve according to the listed driver that finishes 1st in the driver standings for the 2026 F1 season. This market will resolve as soon as the official results of the final scheduled race of the 2026 F1 season are known. If multiple drivers tie for first place in the drivers standings, this market will resolve according to the tiebreak procedure used by F1 to determine the 2026 F1 Drivers’ champion. If at any point it becomes impossible for a listed driver to win the 2026 F1 D",
+    "category": "sports",
+    "yesPool": 64425.21,
+    "noPool": 6378096.23,
+    "cpmmRy": 64925.21,
+    "cpmmRn": 6378596.23
+  },
+  {
+    "title": "Netanyahu out by end of 2026?",
+    "description": "This market will resolve to “Yes” if Benjamin Netanyahu ceases to be Prime Minister of Israel for any period of time between market creation and the specified date (ET). Otherwise, this market will resolve to “No”. An announcement of Benjamin Netanyahu''s resignation/removal before this market''s end date will immediately resolve this market to \"Yes\", regardless of when the announced resignation/removal goes into effect. The resolution source for this market will be official information from Ben",
+    "category": "politics",
+    "yesPool": 448745.18,
+    "noPool": 607125.84,
+    "cpmmRy": 449245.18,
+    "cpmmRn": 607625.84
+  },
+  {
+    "title": "Will Tarcisio de Freitas win the 2026 Brazilian presidential election?",
+    "description": "A presidential election is scheduled to take place in Brazil on October 4, 2026. This market will resolve according to the listed candidate that wins this election. This market includes any potential second round. If the result of this election isn''t known by June 30, 2027, 11:59 PM ET, the market will resolve to \"Other\". This market will resolve based on the result of the election as indicated by a consensus of credible reporting. If there is ambiguity, this market will resolve based solely on",
+    "category": "politics",
+    "yesPool": 69552.95,
+    "noPool": 6885741.92,
+    "cpmmRy": 70052.95,
+    "cpmmRn": 6886241.92
+  },
+  {
+    "title": "Will Mathilde Panot win the 2027 French presidential election?",
+    "description": "The next French presidential election is currently expected to be held around April 2027. This market pertains to the outcome of the next French presidential election, regardless of whether it follows the scheduled end of the current term or is held earlier. The President of France is elected via a two-round system; a candidate must secure over 50% of the vote to win outright in the first round. If no candidate achieves this, the top two contenders advance to a runoff. This market will resolve a",
+    "category": "politics",
+    "yesPool": 31372.81,
+    "noPool": 3105908.02,
+    "cpmmRy": 31872.81,
+    "cpmmRn": 3106408.02
+  },
+  {
+    "title": "Will Richard Grenell be the leader of Venezuela end of 2026?",
+    "description": "This market will resolve to the individual who officially holds the position of the head of state of Venezuela on Dec 31, 2026 at 12 PM ET. For the purposes of this market, \"officially holds\" refers to the individual that was formally appointed, confirmed (if confirmation is required), and sworn in as the head of state of Venezuela or otherwise confirmed by official government information as being the head of state of Venezuela. If the Venezuelan government does not clearly state who is the head",
+    "category": "politics",
+    "yesPool": 163191.29,
+    "noPool": 16155937.67,
+    "cpmmRy": 163691.29,
+    "cpmmRn": 16156437.67
+  },
+  {
+    "title": "Kharg Island no longer under Iranian control by August 31?",
+    "description": "This market will resolve to \"Yes\" if Kharg Island is no longer under Iranian control by August 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\". “No longer under the control of Iran” means that Iran no longer exercises primary governmental or military control over Kharg Island, and another state, occupying force, or internationally backed authority has established control over the island. Temporary raids, isolated landings, special operations, bombardment, sabotage, naval prese",
+    "category": "politics",
+    "yesPool": 38062.93,
+    "noPool": 2200933.18,
+    "cpmmRy": 38562.93,
+    "cpmmRn": 2201433.18
+  },
+  {
+    "title": "Will Jesus Christ return before 2027?",
+    "description": "This market will resolve to \"Yes\" if The Second Coming of Jesus Christ occurs by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\". The resolution source for this market will be a consensus of credible sources.",
+    "category": "general",
+    "yesPool": 633671.44,
+    "noPool": 31862299.79,
+    "cpmmRy": 634171.44,
+    "cpmmRn": 31862799.79
+  },
+  {
+    "title": "Will the US confirm that aliens exist before 2027?",
+    "description": "This market will resolve to \"Yes\" if the President of the United States, any member of the Cabinet of the United States, any member of the Joint Chiefs of Staff, or any US federal agency definitively states that extraterrestrial life or technology exists by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\". The primary resolution source for this market will be official information from the government of the United States, however a consensus of credible reporting will a",
+    "category": "politics",
+    "yesPool": 828052.86,
+    "noPool": 17573121.75,
+    "cpmmRy": 828552.86,
+    "cpmmRn": 17573621.75
+  },
+  {
+    "title": "Will the U.S. invade Iran before 2027?",
+    "description": "This market will resolve to \"Yes\" if the United States commences a military offensive intended to establish control over any portion of Iran by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\". For the purposes of this market, land de facto controlled by Iran or the United States as of November 4, 2025 12:00 PM ET, will be considered the sovereign territory of that country. The resolution source for this market will be a consensus of credible sources.",
+    "category": "politics",
+    "yesPool": 5398345.17,
+    "noPool": 23781899,
+    "cpmmRy": 5398845.17,
+    "cpmmRn": 23782399
+  },
+  {
+    "title": "Will Bitcoin reach $250,000 by December 31, 2026?",
+    "description": "This market will immediately resolve to \"Yes\" if any Binance 1 minute candle for Bitcoin (BTC/USDT) between November 24, 2025, 14:00 and December 31, 2026, 23:59 in the ET timezone has a final \"High\" price equal to or greater than the price specified in the title. Otherwise, this market will resolve to \"No.\" The resolution source for this market is Binance, specifically the BTC/USDT \"High\" prices available at https://www.binance.com/en/trade/BTC_USDT, with the chart settings on \"1m\" for one-minu",
+    "category": "crypto",
+    "yesPool": 44340.81,
+    "noPool": 2642980.73,
+    "cpmmRy": 44840.81,
+    "cpmmRn": 2643480.73
+  },
+  {
+    "title": "Will no Fed rate cuts happen in 2026?",
+    "description": "This market will resolve according to the exact amount of cuts of 25 basis points in 2026 by the Fed (including any cuts made during the December meeting). Emergency rate cuts outside of scheduled FOMC meetings will also count toward the total number of cuts in 2026. This market will remain open until December 31, 2026, 11:59 PM ET, to account for any such emergency actions. For example, if the Fed cuts rates by 50 bps after a meeting, it would be considered 2 cuts (of 25 bps each). This market ",
+    "category": "world",
+    "yesPool": 3088574.35,
+    "noPool": 504880.39,
+    "cpmmRy": 3089074.35,
+    "cpmmRn": 505380.39
+  },
+  {
+    "title": "Will the Los Angeles Chargers win the 2027 NFL league championship?",
+    "description": "This market will resolve according to the team that wins the 2027 NFL league championship. If at any point it becomes impossible for a listed team to win the 2027 NFL league championship per the rules of the NFL (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”. If the 2027 NFL league championship game is cancelled, postponed after March 31, 2027 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”. The p",
+    "category": "sports",
+    "yesPool": 113654.35,
+    "noPool": 2279068.86,
+    "cpmmRy": 114154.35,
+    "cpmmRn": 2279568.86
+  },
+  {
+    "title": "Will Tom Steyer win the California Governor Election in 2026?",
+    "description": "This market will resolve to according to the candidate who wins the 2026 California gubernatorial election currently scheduled for November 3, 2026. If the results of the election are not confirmed by July 31, 2027, this market will resolve to \"Other\". The resolution source for this market is the Associated Press, Fox News, and NBC. This market will resolve once all three sources call the race for the same candidate. If all three sources haven’t called the race in this state for the same candida",
+    "category": "politics",
+    "yesPool": 23904.74,
+    "noPool": 2366569.15,
+    "cpmmRy": 24404.74,
+    "cpmmRn": 2367069.15
+  },
+  {
+    "title": "Will China invade Taiwan by end of 2026?",
+    "description": "This market will resolve to \"Yes\" if China commences a military offensive intended to establish control over any portion of the Republic of China (Taiwan) by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\". Territory under the administration of the Republic of China including any inhabited islands will qualify, however uninhabited islands will not qualify. The resolution source for this market will be will be official confirmation by China, Taiwan, the United Nations,",
+    "category": "politics",
+    "yesPool": 743088.01,
+    "noPool": 19072592.25,
+    "cpmmRy": 743588.01,
+    "cpmmRn": 19073092.25
+  },
+  {
+    "title": "Will the Chicago White Sox win the 2026 World Series?",
+    "description": "This market will resolve according to the team that wins the 2026 MLB World Series. If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”. If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”. The primary resolution source will be ",
+    "category": "sports",
+    "yesPool": 30356.71,
+    "noPool": 1261418.39,
+    "cpmmRy": 30856.71,
+    "cpmmRn": 1261918.39
+  },
+  {
+    "title": "Will Mojtaba Khamenei be head of state in Iran end of 2026?",
+    "description": "This market will resolve to the individual who de facto holds and exercises the powers of the head of state of the Islamic Republic of Iran on December 31, 2026 at 12:00 PM ET. For the purposes of this market, “de facto holds” refers to the individual who exercises primary governing authority over the Iranian state at that time, including effective control over the armed forces, national institutions, and core executive decision-making, regardless of formal title, constitutional designation, or ",
+    "category": "politics",
+    "yesPool": 2406440.31,
+    "noPool": 571827.4,
+    "cpmmRy": 2406940.31,
+    "cpmmRn": 572327.4
+  },
+  {
+    "title": "Will Trump acquire Greenland before 2027?",
+    "description": "This market will resolve to \"Yes\" if the United States officially announces that Greenland will come under US sovereignty by December 31, 2026, 11:59 PM ET. Otherwise this market will resolve to \"No\". Sovereignty is defined as the transfer of the majority of the territory of Greenland from its current status as an autonomous territory within the Kingdom of Denmark to being under the formal governance or jurisdiction of the United States, either as a state, territory, or other classification with",
+    "category": "politics",
+    "yesPool": 678745.52,
+    "noPool": 16951008.21,
+    "cpmmRy": 679245.52,
+    "cpmmRn": 16951508.21
+  },
+  {
+    "title": "Will Naftali Bennett be the next Prime Minister of Israel?",
+    "description": "Legislative elections are schedule to be held in Israel on October 27, 2026. This market will resolve to the next individual who is officially appointed and sworn in as Prime Minister of Israel following the 2026 parliamentary election. If an election is called early, this market will immediately resolve to the individual who is officially appointed and sworn in after that election. To count for resolution, the individual must be formally sworn in. Any interim or caretaker Prime Minister will no",
+    "category": "politics",
+    "yesPool": 79639.16,
+    "noPool": 1368345.52,
+    "cpmmRy": 80139.16,
+    "cpmmRn": 1368845.52
+  },
+  {
+    "title": "New \"Stranger Things\" episode released by December 31? ",
+    "description": "This market will resolve to \"Yes\" if Netflix officially releases a new episode of Stranger Things (i.e., an episode that was not previously available to stream on Netflix) between market creation and December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\". For the purposes of this market, an “episode” must be listed as a distinct episode of Stranger Things on Netflix and be playable for general subscribers in the United States. A behind-the-scenes featurette, documentary, tra",
+    "category": "entertainment",
+    "yesPool": 24788.04,
+    "noPool": 526057.34,
+    "cpmmRy": 25288.04,
+    "cpmmRn": 526557.34
+  },
+  {
+    "title": "Will the Fed decrease interest rates by 25 bps after the September 2026 meeting?",
+    "description": "The FED interest rates are defined in this market by the upper bound of the target federal funds range. The decisions on the target federal funds range are made by the Federal Open Market Committee (FOMC) meetings. This market will resolve to the amount of basis points the upper bound of the target federal funds rate is changed by versus the level it was prior to the Federal Reserve''s September 2026 meeting. If the target federal funds rate is changed to a level not expressed in the displayed o",
+    "category": "politics",
+    "yesPool": 45265.33,
+    "noPool": 3890850.68,
+    "cpmmRy": 45765.33,
+    "cpmmRn": 3891350.68
+  },
+  {
+    "title": "US obtains Iranian enriched uranium by December 31?",
+    "description": "This market will resolve to “Yes” if the US government or military officially announces or confirms that it has gained possession of any quantity of enriched uranium previously controlled by Iran by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to “No”. “Possession” means that the United States has actual physical custody or control of the enriched uranium, whether held within U.S. territory or elsewhere. Announcements of deals, agreements, commitments, or plans under which",
+    "category": "politics",
+    "yesPool": 79394.29,
+    "noPool": 979196.24,
+    "cpmmRy": 79894.29,
+    "cpmmRn": 979696.24
+  },
+  {
+    "title": "Will Williams be the 2026 F1 Constructors'' Champion?",
+    "description": "This market will resolve according to the winner of the Constructors’ Championship for the 2026 F1 season. This market will resolve as soon as the official results of the final scheduled race of the 2026 F1 season are known. In the case of a tie between multiple teams, this market will resolve according to the tiebreak procedure used by F1 to determine the 2026 F1 Constructors’ champion. If at any point it becomes impossible for a listed team to win the 2026 F1 Constructors’ Championship based o",
+    "category": "sports",
+    "yesPool": 19040.87,
+    "noPool": 1885045.98,
+    "cpmmRy": 19540.87,
+    "cpmmRn": 1885545.98
+  },
+  {
+    "title": "Will Harry Kane win the 2026 Ballon d''Or?",
+    "description": "This market will resolve according to the winner of the 2026 Ballon d’Or. If no 2026 Ballon d’Or winner is declared by December 31, 2026, 11:59 PM ET, this market will resolve to \"Other\". The primary resolution source for this market is official information from France Football (https://www.francefootball.fr/).",
+    "category": "sports",
+    "yesPool": 974895.57,
+    "noPool": 664962.41,
+    "cpmmRy": 975395.57,
+    "cpmmRn": 665462.41
+  },
+  {
+    "title": "Will Bitcoin hit $150k by December 31, 2026?",
+    "description": "This market will immediately resolve to \"Yes\" if any Binance 1 minute candle for Bitcoin (BTC/USDT) has a final \"High\" price equal to or greater than the price specified in the title by 11:59PM ET on the date specified in the title. Otherwise, this market will resolve to \"No.\" The resolution source for this market is Binance, specifically the BTC/USDT \"High\" prices available at https://www.binance.com/en/trade/BTC_USDT, with the chart settings on \"1m\" for one-minute candles selected on the top b",
+    "category": "crypto",
+    "yesPool": 39069.54,
+    "noPool": 1331791.35,
+    "cpmmRy": 39569.54,
+    "cpmmRn": 1332291.35
+  },
+  {
+    "title": "Israel closes its airspace by August 31?",
+    "description": "This market will resolve to “Yes” if Israel initiates a major closure of its airspace by the specified date, 11:59 PM ET. Otherwise, this market will resolve to “No”. A “major closure” is defined as a broad closure, cancellation, or complete suspension of commercial aviation across the entirety of Israeli civilian airspace or a region encompassing a majority of Israeli civilian airspace, including commercial flights transiting, arriving in, and departing from that airspace. A qualifying closure ",
+    "category": "politics",
+    "yesPool": 40388.55,
+    "noPool": 434770.82,
+    "cpmmRy": 40888.55,
+    "cpmmRn": 435270.82
+  },
+  {
+    "title": "Will the Iranian regime fall before 2027?",
+    "description": "This market will resolve to \"Yes\" if the Islamic Republic of Iran’s current ruling regime is overthrown, collapsed, or otherwise ceases to govern by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to “No”. This requires a broad consensus of reporting indicating that core structures of the Islamic Republic (e.g. the office of the Supreme Leader, the Guardian Council, IRGC control under clerical authority) have been dissolved, incapacitated, or replaced by a fundamentally diffe",
+    "category": "politics",
+    "yesPool": 799999.22,
+    "noPool": 11507681.12,
+    "cpmmRy": 800499.22,
+    "cpmmRn": 11508181.12
+  },
+  {
+    "title": "Israel x Iran ceasefire continues through August 9?",
+    "description": "This market will resolve to \"Yes\" if a state of ceasefire remains in effect between Israel and Iran through the listed date, 11:59 PM Iran Standard Time (IRST). Otherwise this market will resolve to “No”. A state of ceasefire will be considered to no longer be in effect between Israel and Iran if either Israel or Iran takes a qualifying military action against the other country between market creation and the listed date, 11:59 PM IRST. A qualifying military action refers to an air strike or a s",
+    "category": "politics",
+    "yesPool": 1161582.08,
+    "noPool": 11733.15,
+    "cpmmRy": 1162082.08,
+    "cpmmRn": 12233.15
+  },
+  {
+    "title": "Iran leadership change by December 31?",
+    "description": "This market will resolve to \"Yes\" if the Supreme Leader of Iran, Mojtaba Khamenei, ceases to be the de facto leader of Iran at any point between market creation and the listed date (ET). Otherwise, this market will resolve to \"No\". Mojtaba Khamenei will be considered to no longer be the de facto leader of Iran if he is removed from power, is detained, or otherwise loses his position or is prevented from acting as the de facto leader of Iran within this market''s timeframe. An official announceme",
+    "category": "politics",
+    "yesPool": 366478.58,
+    "noPool": 1614486.73,
+    "cpmmRy": 366978.58,
+    "cpmmRn": 1614986.73
+  },
+  {
+    "title": "Will Donald Trump win the Nobel Peace Prize in 2026?",
+    "description": "This market will resolve according to the winner of the 2026 Nobel Peace Prize, as announced by the Norwegian Nobel Committee. If multiple listed individuals or entities jointly receive the prize, the market will resolve to a single winner. If Donald Trump, Volodymyr Zelenskyy, Benjamin Netanyahu, Vladimir Putin, or Elon Musk are among the recipients, the market will resolve to the highest-ranked among them in that exact order of precedence. If none of those five are among the winners and the pr",
+    "category": "politics",
+    "yesPool": 57302.45,
+    "noPool": 2105054.18,
+    "cpmmRy": 57802.45,
+    "cpmmRn": 2105554.18
+  },
+  {
+    "title": "Will Reza Pahlavi enter Iran by December 31?",
+    "description": "If Reza Pahlavi visits Iran between market creation and December 31, 2026 11:59 PM ET, this market will resolve to \"Yes\". Otherwise, this market will resolve to \"No\". For the purpose of this market, a \"visit\" is defined as Reza Pahlavi physically entering the terrestrial territory of Iran. Whether or not Reza Pahlavi enters Iranian airspace or maritime territory during the timeframe of this market will have no bearing on a positive resolution. The primary resolution source for this market will b",
+    "category": "politics",
+    "yesPool": 60130.92,
+    "noPool": 1033158.58,
+    "cpmmRy": 60630.92,
+    "cpmmRn": 1033658.58
+  },
+  {
+    "title": "Putin out as President of Russia by December 31, 2026?",
+    "description": "This market will resolve to “Yes” if Vladimir Putin ceases to be President of Russia for any period of time between market creation and the specified date (ET). Otherwise, this market will resolve to “No”. An announcement of Vladimir Putin''s resignation/removal before this market''s end date will immediately resolve this market to \"Yes\", regardless of when the announced resignation/removal goes into effect. If the specified individual is detained, effectively removed from the specified position",
+    "category": "politics",
+    "yesPool": 702422.32,
+    "noPool": 8663208.59,
+    "cpmmRy": 702922.32,
+    "cpmmRn": 8663708.59
+  },
+  {
+    "title": "Will Columbus Crew win the 2026 MLS Cup?",
+    "description": "This market will resolve according to the team that wins the 2026 MLS Cup. If at any point it becomes impossible for a listed team to win the 2026 MLS Cup per the rules of MLS (e.g. they are mathematically eliminated), the corresponding market will resolve to “No”. If the 2026 MLS season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”. The primary resolution source will be official information",
+    "category": "sports",
+    "yesPool": 21011.64,
+    "noPool": 1535406.06,
+    "cpmmRy": 21511.64,
+    "cpmmRn": 1535906.06
+  },
+  {
+    "title": "Will United Russia (ER) gain the most seats in the next Russian parliamentary election?",
+    "description": "Parliamentary elections are to be scheduled to be held in Russia in September 2026. This market will resolve according to the political party that gains the greatest number of seats in the next Russian State Duma election, compared to before the election. If the results are not known definitively by September 30, 2027, 11:59 PM ET, this market will resolve to \"Other\". In the event of a tie between multiple parties for the most seats gained, this market will resolve in favor of the party that rec",
+    "category": "politics",
+    "yesPool": 2238564.5,
+    "noPool": 1077827.35,
+    "cpmmRy": 2239064.5,
+    "cpmmRn": 1078327.35
+  },
+  {
+    "title": "Strait of Hormuz traffic returns to normal by August 31?",
+    "description": "This market will resolve to “Yes” if IMF Portwatch publishes a 7-day moving average of transit calls (“Arrivals of Ships”) for the Strait of Hormuz equal to or above 60 for any date between market creation and August 31, 2026. Otherwise, this market will resolve to “No”. Daily transit calls include container, dry bulk, roll-on/roll-off, general cargo, and tanker ships. Ships not reported by IMF Portwatch will not be considered. This market will resolve as soon as IMF Portwatch publishes a 7-day ",
+    "category": "politics",
+    "yesPool": 169544.78,
+    "noPool": 5995719.97,
+    "cpmmRy": 170044.78,
+    "cpmmRn": 5996219.97
+  },
+  {
+    "title": "Will Nebius Group be acquired before 2027?",
+    "description": "This market will resolve to “Yes” if credible reporting confirms that any entity enters into an agreement to acquire the listed company by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to “No”. Mergers where the listed company is subsumed by another entity will count toward a \"Yes\" resolution. An announced agreement between the listed company and an acquiring entity will qualify for a “Yes” resolution, regardless of whether the acquisition is ultimately completed. The prima",
+    "category": "tech",
+    "yesPool": 254466.8,
+    "noPool": 3721576.94,
+    "cpmmRy": 254966.8,
+    "cpmmRn": 3722076.94
+  },
+  {
+    "title": "Hantavirus pandemic in 2026?",
+    "description": "This market will resolve to \"Yes\" if the World Health Organization explicitly characterizes Hantavirus, Hantavirus Pulmonary Syndrome (HPS), Hemorrhagic Fever with Renal Syndrome (HFRS), or a Hantavirus-related outbreak as a \"pandemic\" in an official public communication between market creation and December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\". An explicit characterization includes official WHO statements, reports, press briefings, or publications that clearly descr",
+    "category": "general",
+    "yesPool": 338330.64,
+    "noPool": 8565107.36,
+    "cpmmRy": 338830.64,
+    "cpmmRn": 8565607.36
+  },
+  {
+    "title": "Iran agrees to surrender enriched uranium stockpile by December 31, 2026?",
+    "description": "This market will resolve to \"Yes\" if Iran publicly agrees to surrender its enriched uranium stockpile by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to “No”. An official pledge by Iran to surrender its enriched uranium stockpile will qualify for a “Yes” resolution whether as a unilateral announcement or part of an agreement with the U.S. or Israel. An agreement by Iran to surrender any amount of its enriched uranium stockpile will count. To qualify, Iran must publicly agr",
+    "category": "politics",
+    "yesPool": 89875.02,
+    "noPool": 967478.17,
+    "cpmmRy": 90375.02,
+    "cpmmRn": 967978.17
+  },
+  {
+    "title": "US x Iran Effective Ceasefire by July 31?",
+    "description": "This market will resolve to “Yes” if there is a continuous 14-day period during which the United States does not take a qualifying military action against Iran that begins at any time between market creation and the specified end date, 11:59 PM ET. Otherwise this market will resolve to “No.” The first day of the 14-day period will be the calendar date (ET) after the most recent qualifying military action (or the date of market creation, if no qualifying action has occurred). The period runs thro",
+    "category": "politics",
+    "yesPool": 4353456.34,
+    "noPool": 43974.31,
+    "cpmmRy": 4353956.34,
+    "cpmmRn": 44474.31
+  },
+  {
+    "title": "Will Scream 7 be the top grossing movie of 2026?",
+    "description": "This market will resolve according to the title of the film with the highest 2026 gross according to the \"Gross\" column on https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses once data for December 31 is made available. Note: This market is about the movie''s domestic calendar gross in 2026 - dates outside of 2026 will not count toward this movie''s gross. In the event of an exact tie the film that comes first alphabetically will be considered the winner. If there is no final ",
+    "category": "entertainment",
+    "yesPool": 12251.01,
+    "noPool": 1212849.62,
+    "cpmmRy": 12751.01,
+    "cpmmRn": 1213349.62
+  },
+  {
+    "title": "Will Philadelphia 76ers win the 2027 NBA Finals?",
+    "description": "This market will resolve to \"Yes\" if the listed team is determined as the champion of the NBA for the 2026-27 season. Otherwise, it will resolve to \"No\". If at any point it becomes impossible for a listed team to be named as the champion of NBA for the 2026-27 season per the rules of NBA (e.g., participant is eliminated), the corresponding market will resolve to \"No\". If multiple teams are declared winners, this market will resolve in favor of the team whose listed name comes first alphabeticall",
+    "category": "sports",
+    "yesPool": 59966.51,
+    "noPool": 396052.55,
+    "cpmmRy": 60466.51,
+    "cpmmRn": 396552.55
+  },
+  {
+    "title": "US-Iran Final Nuclear Deal by August 31, 2026?",
+    "description": "On June 14, 2026, the United States and Iran announced a written diplomatic agreement, including a 60-day extendable period in which both countries committed to negotiate toward a “final deal” regarding Iran’s nuclear program and other topics. This market resolves to “Yes” if a qualifying written diplomatic instrument between the United States and Iran has been mutually signed or adopted by the specified date, 11:59 PM ET. Otherwise, this market resolves to “No.” Unless the written instrument is",
+    "category": "politics",
+    "yesPool": 31238.16,
+    "noPool": 1921146.75,
+    "cpmmRy": 31738.16,
+    "cpmmRn": 1921646.75
+  },
+  {
+    "title": "Will the U.S. invade Venezuela by December 31, 2026?",
+    "description": "This market will resolve to \"Yes\" if the United States commences a military offensive intended to establish control over any portion of Venezuela between November 3, 2025 and December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\". For the purposes of this market, land de facto controlled by Venezuela or the United States as of September 6, 2025, 12:00 PM ET, will be considered the sovereign territory of that country. The resolution source for this market will be a consensus ",
+    "category": "politics",
+    "yesPool": 5327.02,
+    "noPool": 113051.28,
+    "cpmmRy": 5827.02,
+    "cpmmRn": 113551.28
+  },
+  {
+    "title": "Will Nithya Raman win the 2026 Los Angeles mayoral election?",
+    "description": "The 2026 Los Angeles mayoral election will be held on June 2, 2026, to elect the mayor of Los Angeles, California. If no candidate receives a majority of the vote, a runoff election will be held on November 3, 2026. This market will resolve according to the candidate that wins the election. The primary resolution source for this market will be a consensus of credible reporting; however, if there is any ambiguity in the results, this market will resolve according to official information from the ",
+    "category": "politics",
+    "yesPool": 253361.72,
+    "noPool": 409021.86,
+    "cpmmRy": 253861.72,
+    "cpmmRn": 409521.86
+  },
+  {
+    "title": "US announces end of Iranian blockade by August 15, 2026?",
+    "description": "On July 13, 2026, Trump announced the United States would reinstate its naval blockade of Iran, targeting Iranian ships and customers. This market will resolve to “Yes” if the United States government, or an authorized representative of the United States government, publicly and officially announces the end, termination, lifting, or suspension of the United States’ naval blockade on Iranian ships and ships of Iranian customers, between market creation and the specified date, 11:59 PM ET. Otherwi",
+    "category": "politics",
+    "yesPool": 92916.76,
+    "noPool": 1145973.39,
+    "cpmmRy": 93416.76,
+    "cpmmRn": 1146473.39
+  },
+  {
+    "title": "Xi Jinping out before 2027?",
+    "description": "This market will resolve to \"Yes\" if China''s General Secretary of the Communist Party, Xi Jinping, is removed from power for any length of time between July 3, 2025, and December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\". CCP General Secretary Xi Jinping will be considered removed from power if he announces his resignation from his role as General Secretary, or is otherwise dismissed, detained, disqualified, or otherwise loses his position or is prevented from fulfillin",
+    "category": "politics",
+    "yesPool": 279907.63,
+    "noPool": 5739611.23,
+    "cpmmRy": 280407.63,
+    "cpmmRn": 5740111.23
+  },
+  {
+    "title": "Will Reza Pahlavi lead Iran in 2026?",
+    "description": "This market will resolve to “Yes” if Reza Pahlavi de facto holds and exercises the powers of the head of state of Iran by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to “No.” Reza Pahlavi will be considered to hold power if he exercises primary governing authority over the Iranian state during the specified timeframe, including effective control over the armed forces, national institutions, and core executive decision-making, regardless of formal title, constitutional des",
+    "category": "politics",
+    "yesPool": 195860.81,
+    "noPool": 5650730.52,
+    "cpmmRy": 196360.81,
+    "cpmmRn": 5651230.52
+  },
+  {
+    "title": "Trump out as President before 2027?",
+    "description": "This market will resolve to “Yes” if Donald Trump resigns or is removed as President or otherwise ceases to be the President of the United States for any period of time by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to “No”. An announcement of Donald Trump''s resignation/removal before this market''s end date will immediately resolve this market to \"Yes\", regardless of when the announced resignation/removal goes into effect. Only permanent removal from office will qualify",
+    "category": "politics",
+    "yesPool": 343849.49,
+    "noPool": 4946142.7,
+    "cpmmRy": 344349.49,
+    "cpmmRn": 4946642.7
+  },
+  {
+    "title": "Will the US acquire part of Greenland in 2026?",
+    "description": "This market will resolve to “Yes” if the United States acquires control of any land territory that is part of Greenland by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to “No”. Only the transfer of sovereignty, or the acquisition of primary or exclusive jurisdiction or control qualifies. 1. Transfer of Sovereignty: This will qualify if a binding agreement or legal instrument results in a defined area of Greenland coming under the formal sovereignty of the U.S. (e.g., incor",
+    "category": "politics",
+    "yesPool": 290177.19,
+    "noPool": 4985771.71,
+    "cpmmRy": 290677.19,
+    "cpmmRn": 4986271.71
+  },
+  {
+    "title": "Bab el-Mandeb Strait effectively closed by September 30?",
+    "description": "This market will resolve to “Yes” if IMF PortWatch publishes a 7-day moving average of transit calls (“Arrivals of Ships”) for the Bab el-Mandeb Strait less than or equal to 10 for any date between market creation and the listed date. Otherwise, this market will resolve to “No”. This market will resolve as soon as IMF PortWatch publishes a 7-day moving average of transit calls for the Bab el-Mandeb Strait equal to or below 10, or once data has been published for the listed date and no such value",
+    "category": "politics",
+    "yesPool": 97728,
+    "noPool": 833014.87,
+    "cpmmRy": 98228,
+    "cpmmRn": 833514.87
+  },
+  {
+    "title": "Will Ethereum dip to $1,500 by December 31, 2026?",
+    "description": "This market will immediately resolve to “Yes” if any Binance 1-minute candle for Ethereum (ETH/USDT) between November 24, 2025, 14:00 and December 31, 2026, 23:59 in the ET timezone has a final “Low” price equal to or lower than the price specified in the title. Otherwise, this market will resolve to “No.” The resolution source for this market is Binance, specifically the ETH/USDT “Low” prices available at: https://www.binance.com/en/trade/ETH_USDT with the chart settings on “1m” (one-minute can",
+    "category": "crypto",
+    "yesPool": 437082.29,
+    "noPool": 599886.38,
+    "cpmmRy": 437582.29,
+    "cpmmRn": 600386.38
+  },
+  {
+    "title": "2026 Balance of Power: D Senate, D House",
+    "description": "This market will resolve according to the party that wins control of the United States Senate and the party that wins control of the United States House of Representatives in the 2026 United States midterm election. A party wins control of the United States Senate if it wins a majority of the chamber’s voting seats. If no party wins a majority of voting seats, the party that wins control of the chamber is the party that wins half of the voting seats and holds the Vice Presidency. If the outcome ",
+    "category": "politics",
+    "yesPool": 610580.59,
+    "noPool": 622915.55,
+    "cpmmRy": 611080.59,
+    "cpmmRn": 623415.55
+  },
+  {
+    "title": "Bitcoin all time high by December 31, 2026?",
+    "description": "This market will resolve to \"Yes\" if any Binance 1 minute candle for BTC/USDT between 16 December ''25 10:30 and 11:59PM ET on the date specified in the title has a final “High” price that is higher than any previous Binance 1 minute candle''s \"High\" price on any prior date. Otherwise, this market will resolve to \"No\". The resolution source for this market is Binance, specifically the BTC/USDT \"High\" prices currently available at https://www.binance.com/en/trade/BTC_USDT with “1m” and “Candles” ",
+    "category": "crypto",
+    "yesPool": 34731.3,
+    "noPool": 745747.41,
+    "cpmmRy": 35231.3,
+    "cpmmRn": 746247.41
+  },
+  {
+    "title": "Will the Democratic Party control the House after the 2026 Midterm elections?",
+    "description": "This market will resolve according to the party that wins control of the United States House of Representatives in the 2026 United States midterm election. A party wins control of the United States House of Representatives if it wins a majority of the chamber’s voting seats. If no party wins a majority of voting seats, the chamber will be deemed controlled by the party with which the first elected Speaker of the House of the Congress that convenes after the 2026 midterm election is affiliated. T",
+    "category": "politics",
+    "yesPool": 2296253.19,
+    "noPool": 328036.17,
+    "cpmmRy": 2296753.19,
+    "cpmmRn": 328536.17
+  },
+  {
+    "title": "US x Iran diplomatic meeting by August 31, 2026?",
+    "description": "On June 22, the first round of U.S.-Iran diplomatic talks in Switzerland concluded, with mediators reporting progress toward a roadmap for a final deal and follow-on technical talks expected to continue.(see: https://www.aljazeera.com/news/2026/6/22/us-iran-agree-on-roadmap-towards-final-deal-in-switzerland-talks). This market will resolve to “Yes” if the next formal senior-level round of peace talks between representatives of the United States and Iran begins by the listed date, 11:59 PM ET. Ot",
+    "category": "politics",
+    "yesPool": 67679.25,
+    "noPool": 319059.33,
+    "cpmmRy": 68179.25,
+    "cpmmRn": 319559.33
+  },
+  {
+    "title": "Will Iran announce withdrawal from MOU negotiations by August 15?",
+    "description": "On June 14, 2026, the United States and Iran announced a memorandum of understanding ending the immediate conflict and establishing a 60-day framework for negotiating a final agreement. This market will resolve to “Yes” if the Iranian government, or an authorized representative of the Iranian government, publicly and officially announces its termination of participation in the negotiation process toward the final agreement contemplated by the June 14, 2026 MOU between market creation and the spe",
+    "category": "politics",
+    "yesPool": 4562.7,
+    "noPool": 392193.85,
+    "cpmmRy": 5062.7,
+    "cpmmRn": 392693.85
+  },
+  {
+    "title": "Will Russia capture Kostyantynivka by December 31, 2026?",
+    "description": "This market will resolve to “Yes” if, according to the ISW map, Russia captures the Kostyantynivka railroad station located on Pravoberezhna vulytsia by December 31, 2026 at 11:59 PM ET. The railroad station will be considered captured if any part of the train station icon is shaded red on the ISW map (https://storymaps.arcgis.com/stories/36a7f6a6f5a9448496de641cf64bd375) by the resolution date. If the area is not shaded red by December 31, 2026, 11:59 PM ET, the market will resolve to “No”. If ",
+    "category": "politics",
+    "yesPool": 781102.99,
+    "noPool": 74900.29,
+    "cpmmRy": 781602.99,
+    "cpmmRn": 75400.29
+  },
+  {
+    "title": "Will MetaMask launch a token by September 30, 2026?",
+    "description": "This market will resolve to \"Yes\" if Metamask officially launches a token by September 30, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\". The token must be actively and publicly transferable and tradable. Announcements alone do not qualify The primary resolution source for this market will be information from Metamask, however a consensus of credible reporting will also be used. ",
+    "category": "crypto",
+    "yesPool": 12778.37,
+    "noPool": 488334.33,
+    "cpmmRy": 13278.37,
+    "cpmmRn": 488834.33
+  },
+  {
+    "title": "Israel withdraws from Lebanon by August 31, 2026?",
+    "description": "This market will resolve to \"Yes\" if Israel announces it has withdrawn all ground forces from Lebanon by the specified date, 11:59 PM ET. Otherwise, this market will resolve to \"No\". For this market to resolve to \"Yes\" it is sufficient that Israel announces its ground forces have withdrawn from all Lebanese territory, regardless of if some Lebanese territory remains under their control or ground incursions by Israeli forces continue. However, an announcement of a planned or future withdrawal wil",
+    "category": "politics",
+    "yesPool": 3688.48,
+    "noPool": 317048.89,
+    "cpmmRy": 4188.48,
+    "cpmmRn": 317548.89
+  },
+  {
+    "title": "Iran full airspace closure by August 31?",
+    "description": "This market will resolve to “Yes” if Iran initiates a general closure of its airspace, that is not solely due to weather conditions, between market creation and the specified date, 11:59 PM ET. Otherwise, this market will resolve to “No”. A “general closure” refers to a cancellation or suspension of aviation which is generally applicable to all commercial flights transiting Iranian airspace (“Tehran FIR”). A qualifying closure must apply generally to all of Iran or the Tehran FIR; limited cancel",
+    "category": "world",
+    "yesPool": 55781.47,
+    "noPool": 531391.87,
+    "cpmmRy": 56281.47,
+    "cpmmRn": 531891.87
+  },
+  {
+    "title": "Strait of Hormuz traffic returns to normal by December 31?",
+    "description": "This market will resolve to “Yes” if IMF Portwatch publishes a 7-day moving average of transit calls (“Arrivals of Ships”) for the Strait of Hormuz equal to or above 60 for any date between market creation and December 31, 2026. Otherwise, this market will resolve to “No”. Daily transit calls include container, dry bulk, roll-on/roll-off, general cargo, and tanker ships. Ships not reported by IMF Portwatch will not be considered. This market will resolve as soon as IMF Portwatch publishes a 7-da",
+    "category": "politics",
+    "yesPool": 1837425.3,
+    "noPool": 2114026.95,
+    "cpmmRy": 1837925.3,
+    "cpmmRn": 2114526.95
+  },
+  {
+    "title": "Will Ebuka Okorie win the 2026-27 NBA Rookie of the Year?",
+    "description": "This market will resolve to the player who wins the Rookie of the Year award for the 2026-27 NBA regular season. In the event of a tie, this market will resolve according to the official winner as determined by NBA rules. If multiple winners are announced then this market will resolve to the player whose listed last name comes first alphabetically. If the 2026-27 NBA regular season is cancelled, postponed after April 30, 2027, 11:59 PM ET, or there is otherwise no winner declared within that tim",
+    "category": "sports",
+    "yesPool": 13029.56,
+    "noPool": 1289926.82,
+    "cpmmRy": 13529.56,
+    "cpmmRn": 1290426.82
+  },
+  {
+    "title": "Will there be at least 10000 measles cases in the U.S. in 2026?",
+    "description": "This market will resolve to \"Yes\" if there have been the specified amount or more confirmed cases of Measles (Rubeola) in humans in the territory of the United States of America in 2026 according to the CDC case counter between January 1, 2026, 12:00 AM ET and December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\". The resolution source for this market will be the CDC Measles (Rubeola) counter (see: https://www.cdc.gov/measles/data-research/index.html) at the resolution time",
+    "category": "tech",
+    "yesPool": 188918.63,
+    "noPool": 3068299.2,
+    "cpmmRy": 189418.63,
+    "cpmmRn": 3068799.2
+  },
+  {
+    "title": "Will the US officially declare war on Iran by December 31, 2026?",
+    "description": "This market will resolve to \"Yes\" if the United States formally declares war on Iran through an act of Congress between market creation and the specified date, 11:59 PM ET. Otherwise, this market will resolve to \"No.\" To qualify, Congress must pass a formal declaration of war, consistent with its constitutional authority under Article I, Section 8. Authorizations for the use of military force (AUMFs), executive orders, presidential statements, or military actions do not qualify unless accompanie",
+    "category": "politics",
+    "yesPool": 12049.02,
+    "noPool": 383000.71,
+    "cpmmRy": 12549.02,
+    "cpmmRn": 383500.71
+  },
+  {
+    "title": "Will Base launch a token by December 31, 2026?",
+    "description": "This market will resolve to \"Yes\" if Base officially launches a token by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\". The token must be actively and publicly transferable and tradable. Announcements alone do not qualify The primary resolution source for this market will be information from Base, however a consensus of credible reporting will also be used. ",
+    "category": "crypto",
+    "yesPool": 32407.59,
+    "noPool": 308724.94,
+    "cpmmRy": 32907.59,
+    "cpmmRn": 309224.94
+  },
+  {
+    "title": "Will Israel strike 4 countries in 2026?",
+    "description": "This market will resolve according to the total number of different countries'' soil that Israel initiates a drone, missile, or air strike between January 1, 2026, 12:00 AM ET and December 31, 2026, 11:59 PM ET. Strikes on embassies or consulates will count towards the country the embassy or consulate is located in, not towards the country they represent. Strikes within the territory controlled by Israel as of December 31, 2025, 11:59 PM ET, as well as strikes within the West Bank or the Gaza St",
+    "category": "politics",
+    "yesPool": 345651.05,
+    "noPool": 268293.98,
+    "cpmmRy": 346151.05,
+    "cpmmRn": 268793.98
+  },
+  {
+    "title": "Fed rate hike in 2026?",
+    "description": "This market will resolve to “Yes” if the upper bound of the target federal funds rate is increased at any point between January 1, 2026 and the Fed''s December 2026 meeting, currently scheduled for December 8-9, 2026. Otherwise, this market will resolve to “No”. This market may not resolve to \"No\" until the Fed has released its rate change decision following its December meeting. The primary resolution source for this market will be the official website of the Federal Reserve (https://www.federa",
+    "category": "general",
+    "yesPool": 1988477.46,
+    "noPool": 1660105.03,
+    "cpmmRy": 1988977.46,
+    "cpmmRn": 1660605.03
+  },
+  {
+    "title": "US strike on Cuba by December 31?",
+    "description": "This market will resolve to \"Yes\" if a US-initiated drone, missile, or air strike on the soil of Cuba is announced or credibly reported to have occurred by the listed date ET. Otherwise, this market will resolve to \"No\". For the purposes of this market, a qualifying \"strike\" is defined as the use of aerial bombs, drones, or missiles (including FPV and ATGM strikes as well as cruise or ballistic missiles) launched by any United States operatives, including military forces, intelligence agencies, ",
+    "category": "politics",
+    "yesPool": 495167.53,
+    "noPool": 2044153.13,
+    "cpmmRy": 495667.53,
+    "cpmmRn": 2044653.13
+  },
+  {
+    "title": "Ledger IPO before 2027?",
+    "description": "This market will resolve to \"Yes\" if the listed company completes an Initial Public Offering (IPO) by December 31, 2026, 11:59 PM ET, as confirmed by official company announcements or credible news sources. The IPO refers to the first sale of stock by the listed company to the public on any recognized stock exchange. If the listed company merges with another entity, is acquired, or ceases to exist before the market resolves, the market will also resolve to \"No\". This market will resolve early if",
+    "category": "tech",
+    "yesPool": 26934.33,
+    "noPool": 229583.11,
+    "cpmmRy": 27434.33,
+    "cpmmRn": 230083.11
+  },
+  {
+    "title": "Clarity Act (H.R.3633) signed into law in 2026?",
+    "description": "This market will resolve to \"Yes\" if the Digital Asset Market Clarity Act of 2025 (H.R.3633) is passed by both chambers of the U.S. Congress and signed into law by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\". The primary resolution source is Congress.gov’s legislation tracker (https://www.congress.gov/bill/119th-congress/house-bill/3633) and other official information from the government of the United States, however other credible reporting may be used.",
+    "category": "crypto",
+    "yesPool": 639827.4,
+    "noPool": 2818699.07,
+    "cpmmRy": 640327.4,
+    "cpmmRn": 2819199.07
+  },
+  {
+    "title": "Will the upper bound of the target federal funds rate be ≥ 4.5% at the end of 2026?",
+    "description": "The FED rate is defined in this market by the upper bound of the target federal funds range. The decisions on the target federal fund range are made by the Federal Open Market Committee (FOMC) meetings. This market will resolve according to the upper bound of the Federal Reserve’s target federal funds range after the December 2026 Federal Open Market Committee (FOMC) meeting, currently scheduled for December 8-9, 2026. This market may resolve immediately after the statement for the FOMC’s Decemb",
+    "category": "politics",
+    "yesPool": 81867.73,
+    "noPool": 1122069.47,
+    "cpmmRy": 82367.73,
+    "cpmmRn": 1122569.47
+  },
+  {
+    "title": "Opensea FDV above $500M one day after launch?",
+    "description": "This market will resolve to \"Yes\" if the Fully Diluted Valuation of Opensea''s token is greater than the value specified in the title 1 day after launch. Otherwise, the market will resolve to \"No.\" The token must be actively, publicly transferable and tradable to be considered a launch. \"1 day after launch\" is defined as 4:00 PM ET on the calendar day following launch. The resolution source for this market is the most liquid price source available. If Opensea doesn''t launch a token by December ",
+    "category": "crypto",
+    "yesPool": 133711.81,
+    "noPool": 994657.92,
+    "cpmmRy": 134211.81,
+    "cpmmRn": 995157.92
+  },
+  {
+    "title": "Will Katie Boulter win the 2026 Women’s US Open?",
+    "description": "The 2026 U.S. Open tennis tournament is scheduled for August 23 - September 13, 2026. This market will resolve to the player that wins the 2026 U.S. Open Women’s Singles Tournament. If at any point it becomes impossible for a listed player to win the 2026 U.S. Open Women’s Singles Tournament per the rules of the tournament, the corresponding market will resolve to “No”. If the 2026 U.S. Open Women’s Singles Tournament is cancelled, postponed after October 31, 2026, or there is otherwise no winne",
+    "category": "sports",
+    "yesPool": 8327.64,
+    "noPool": 824436.65,
+    "cpmmRy": 8827.64,
+    "cpmmRn": 824936.65
+  },
+  {
+    "title": "Mojtaba Khamenei seen in public by August 31?",
+    "description": "This market will resolve to \"Yes\" if Supreme Leader of Iran, Mojtaba Khamenei, is photographed or videotaped between market creation and the listed date (ET). Otherwise, this market will resolve to \"No\". For this market to resolve to \"Yes,\" the images or video must be taken and released within this market''s timeframe. The images or video must be authentic. Archival material, previously recorded footage, reused images, digitally altered content, AI-generated media, staged reproductions, or any p",
+    "category": "politics",
+    "yesPool": 14529.47,
+    "noPool": 184504.41,
+    "cpmmRy": 15029.47,
+    "cpmmRn": 185004.41
+  },
+  {
+    "title": "Will Shakhtar Donetsk win the 2026-27 UEFA Champions League Championship?",
+    "description": "This market will resolve according to the team that wins the 2026-27 UEFA Champions League Championship. If at any point it becomes impossible for a listed team to win the 2026-27 UEFA Champions League Championship per the rules of UEFA Champions League (e.g., they are eliminated in the playoffs), the corresponding market will resolve to \"No\". If the 2026-27 UEFA Champions League season is cancelled, postponed after June 19, 2027, 11:59 PM ET or there is otherwise no winner declared within that ",
+    "category": "sports",
+    "yesPool": 20874.01,
+    "noPool": 2066526.7,
+    "cpmmRy": 21374.01,
+    "cpmmRn": 2067026.7
+  },
+  {
+    "title": "Will María Corina Machado enter Venezuela by August 31?",
+    "description": "If María Corina Machado visits Venezuela between market creation and August 31, 2026, 11:59 PM ET, this market will resolve to \"Yes\". Otherwise, this market will resolve to \"No\". For the purpose of this market, a \"visit\" is defined as María Corina Machado physically entering the terrestrial territory of Venezuela. Whether or not María Corina Machado enters Venezuelan airspace or maritime territory during the timeframe of this market will have no bearing on a positive resolution. The primary reso",
+    "category": "politics",
+    "yesPool": 270.15,
+    "noPool": 3885.95,
+    "cpmmRy": 770.15,
+    "cpmmRn": 4385.95
+  },
+  {
+    "title": "Will Maxx Crosby play for New York Jets next?",
+    "description": "This market will resolve to the next team Maxx Crosby officially joins by August 31, 2026, 11:59 PM ET. If Maxx Crosby does not officially join a new team by August 31, 2026, 11:59 PM ET, this market will resolve to “Las Vegas Raiders”. If Maxx Crosby joins a team that is not listed, this market will resolve to “Other”. If Maxx Crosby is released and is not signed by another team, retires, or is not under contract with any professional team by August 31, 2026, 11:59 PM ET, this market will resol",
+    "category": "sports",
+    "yesPool": 6006.98,
+    "noPool": 594690.8,
+    "cpmmRy": 6506.98,
+    "cpmmRn": 595190.8
+  },
+  {
+    "title": "Game 2: Any Player Quadra Kill?",
+    "description": "This market is about whether any player achieves a Quadra Kill during Game 2. In League of Legends, a Quadra Kill occurs when a single player kills 4 enemy champions in rapid succession. This market will resolve to \"Yes\" if any player on either team achieves a Quadra Kill during Game 2. This market will resolve to \"No\" if no player achieves a Quadra Kill. A Penta Kill (5 kills in rapid succession) also counts as a Quadra Kill having occurred for the purposes of this market. If the match is cance",
+    "category": "sports",
+    "yesPool": 1575304.04,
+    "noPool": 1575304.04,
+    "cpmmRy": 1575804.04,
+    "cpmmRn": 1575804.04
+  },
+  {
+    "title": "Will US withdraw from NATO before 2027?",
+    "description": "This market will resolve to \"Yes\" if the United States formally initiates a withdrawal from NATO or provides an official notice of denunciation to NATO by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\". A notice of denunciation refers to the submission of a notice of withdrawal as per Article 13 of the North Atlantic Treaty. Any action meeting these criteria will qualify for a “Yes” resolution regardless of if its implementation is immediately halted or delayed by ju",
+    "category": "politics",
+    "yesPool": 21234.32,
+    "noPool": 622230.06,
+    "cpmmRy": 21734.32,
+    "cpmmRn": 622730.06
+  },
+  {
+    "title": "Will Minnesota Vikings win the 2027 NFL NFC Championship?",
+    "description": "This market will resolve according to the team that wins the 2027 NFC championship game. If at any point it becomes impossible for a listed team to win the 2027 NFL NFC championship per the rules of the NFL (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”. If the 2027 NFL NFC championship game is cancelled, postponed after March 31, 2027 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”. The primary r",
+    "category": "sports",
+    "yesPool": 35096.36,
+    "noPool": 913453.9,
+    "cpmmRy": 35596.36,
+    "cpmmRn": 913953.9
+  },
+  {
+    "title": "Will Grigor Dimitrov win the 2026 Men''s US Open?",
+    "description": "The 2026 U.S. Open tennis tournament is scheduled for August 23 - September 13, 2026. This market will resolve to the player that wins the 2026 U.S. Open Men’s Singles Tournament. If at any point it becomes impossible for a listed player to win the 2026 U.S. Open Men’s Singles Tournament per the rules of the tournament, the corresponding market will resolve to “No”. If the 2026 U.S. Open Men’s Singles Tournament is cancelled, postponed after October 31, 2026, or there is otherwise no winner decl",
+    "category": "sports",
+    "yesPool": 3769.02,
+    "noPool": 373132.88,
+    "cpmmRy": 4269.02,
+    "cpmmRn": 373632.88
+  },
+  {
+    "title": "Predict.fun FDV above $200M one day after launch?",
+    "description": "This market will resolve to \"Yes\" if the Fully Diluted Valuation of Predict.fun''s governance token is greater than the value specified in the title 1 day after launch. Otherwise, the market will resolve to \"No.\" The token must be actively, publicly transferable and tradable to be considered a launch. The FDV will be determined using the total token supply multiplied by the token price. \"1 day after launch\" is defined as 4:00 PM ET on the calendar day following launch. The resolution source for ",
+    "category": "crypto",
+    "yesPool": 409890.18,
+    "noPool": 140297.98,
+    "cpmmRy": 410390.18,
+    "cpmmRn": 140797.98
+  },
+  {
+    "title": "Will Russia test a nuclear weapon by September 30 2026?",
+    "description": "This market will resolve to \"Yes\" if Russia conducts a nuclear test by the listed date (ET). Otherwise, this market will resolve to \"No\". A nuclear test is defined as the intentional non-combat detonation of a device by Russia that produces a nuclear chain reaction (fission or fusion), regardless of yield. Accidents, radiological dispersal devices (bombs that spread radioactive material using conventional explosives such as \"dirty bombs\"), or actions by third parties will not count toward this m",
+    "category": "politics",
+    "yesPool": 941.43,
+    "noPool": 68793.82,
+    "cpmmRy": 1441.4299999999998,
+    "cpmmRn": 69293.82
+  },
+  {
+    "title": "Russia x Ukraine ceasefire agreement by December 31, 2026?",
+    "description": "This market will resolve to “Yes” if there is a ceasefire agreement between Russia and Ukraine by the specified date, 11:59 PM ET. Otherwise, this market will resolve to “No”. A ceasefire agreement refers to any mutually-agreed suspension of direct military engagement between Russia and Ukraine, which is either officially announced by both countries or confirmed by a consensus of credible reporting to have been mutually agreed by both countries. A broader peace deal, normalization agreement, pol",
+    "category": "politics",
+    "yesPool": 281128.35,
+    "noPool": 779733.34,
+    "cpmmRy": 281628.35,
+    "cpmmRn": 780233.34
+  },
+  {
+    "title": "Will NVIDIA be the largest company in the world by market cap on December 31?",
+    "description": "This market will resolve to the largest company in the world by market cap on December 31, 2026, as of market close. The resolution source for this market will be a consensus of credible reporting.",
+    "category": "tech",
+    "yesPool": 356469.71,
+    "noPool": 149161.09,
+    "cpmmRy": 356969.71,
+    "cpmmRn": 149661.09
+  },
+  {
+    "title": "Will WTI Crude Oil (WTI) hit (HIGH) $85 in August?",
+    "description": "This market will resolve to \"Yes\" if, at any point after market creation and during a trading session of August 2026, any 1-minute candle for the Active Month of WTI Crude Oil futures has a final \"High\" or \"Low\" price equal to or beyond (above for ↑ High Prices, below for ↓ Low Prices) the listed price. Otherwise, this market will resolve to \"No\". Prices will be used exactly as published by Pyth, without rounding. If the Active Month contract does not trade at all during the listed time frame, t",
+    "category": "general",
+    "yesPool": 222173.37,
+    "noPool": 60850.03,
+    "cpmmRy": 222673.37,
+    "cpmmRn": 61350.03
+  },
+  {
+    "title": "Puffpaw FDV above $100M one day after launch?",
+    "description": "This market will resolve to \"Yes\" if the Fully Diluted Valuation of Puffpaw''s governance token is greater than the value specified in the title 1 day after launch. Otherwise, the market will resolve to \"No.\" The token must be actively, publicly transferable and tradable to be considered a launch. The FDV will be determined using the total token supply multiplied by the token price. \"1 day after launch\" is defined as 4:00 PM ET on the calendar day following launch. The resolution source for this",
+    "category": "crypto",
+    "yesPool": 169105.25,
+    "noPool": 676421.02,
+    "cpmmRy": 169605.25,
+    "cpmmRn": 676921.02
+  },
+  {
+    "title": "Will Russia invade a NATO country by December 31, 2026?",
+    "description": "This market will resolve to \"Yes\" if Russia commences a military offensive intended to establish control over any portion of any NATO country by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\". For the purposes of this market, land de facto controlled by NATO member states or Russia as of May 28, 2025, will be considered the sovereign territory of those countries. Hybrid or “grey zone” operations conducted by unmarked personnel will qualify if they are confirmed to be",
+    "category": "politics",
+    "yesPool": 6834.78,
+    "noPool": 117433.87,
+    "cpmmRy": 7334.78,
+    "cpmmRn": 117933.87
+  },
+  {
+    "title": "Will Manchester City win the 2026-27 English Premier League (EPL) Championship?",
+    "description": "This market will resolve according to the team that wins the 2026-27 English Premier League (EPL) Championship. If at any point it becomes impossible for a listed team to win the 2026-27 English Premier League (EPL) Championship per the rules of English Premier League (EPL) (e.g., they are eliminated in the playoffs), the corresponding market will resolve to \"No\". If the 2026-27 English Premier League (EPL) season is cancelled, postponed after June 14, 2027, 11:59 PM ET or there is otherwise no ",
+    "category": "sports",
+    "yesPool": 204647.14,
+    "noPool": 567606.21,
+    "cpmmRy": 205147.14,
+    "cpmmRn": 568106.21
+  },
+  {
+    "title": "Will Anthropic have the highest IPO Market Cap 2026?",
+    "description": "This market will resolve to the company that achieves the highest market capitalization in U.S. dollars based on the official closing price on its first trading day in 2026. This market will resolve to a company that completes an Initial Public Offering (IPO) between January 1 and December 31, 2026, 11:59 PM ET. Market capitalization is defined as the total number of outstanding shares multiplied by the closing share price on the first trading day. If two or more companies have exactly equal hig",
+    "category": "tech",
+    "yesPool": 36911.73,
+    "noPool": 321454.6,
+    "cpmmRy": 37411.73,
+    "cpmmRn": 321954.6
+  },
+  {
+    "title": "Will Tyreek Hill play for the Chicago Bears next?",
+    "description": "This market will resolve to the next NFL team Tyreek Hill joins by August 31, 2026, 11:59 PM ET. If Tyreek Hill does not join a new NFL team by August 31, 2026, 11:59 PM ET, this market will resolve to “Other”. If Tyreek Hill joins a team that is not listed, this market will resolve to “Other”. If Tyreek Hill is released and is not signed by another team, retires, or is not under contract with any NFL team by August 31, 2026, 11:59 PM ET, this market will resolve to “Other”. Transfers or assignm",
+    "category": "sports",
+    "yesPool": 10967.35,
+    "noPool": 1085767.36,
+    "cpmmRy": 11467.35,
+    "cpmmRn": 1086267.36
+  },
+  {
+    "title": "Will Bitcoin reach $100,000 in August?",
+    "description": "This market will immediately resolve to \"Yes\" if any Binance 1 minute candle for BTC/USDT during the month specified in the title (from 00:00 AM ET on the first day to 11:59 PM ET on the last), has a final High price equal to or greater than the price specified in the title. Otherwise, this market will resolve to \"No.\" The resolution source for this market is Binance, specifically the BTC/USDT High prices available at https://www.binance.com/en/trade/BTC_USDT, with the chart settings on \"1m\" for",
+    "category": "crypto",
+    "yesPool": 2722.99,
+    "noPool": 269575.75,
+    "cpmmRy": 3222.99,
+    "cpmmRn": 270075.75
+  },
+  {
+    "title": "LoL: Bilibili Gaming vs JD Gaming (BO3) - LPL Group Ascend",
+    "description": "This market refers to the LoL match between Bilibili Gaming and JD Gaming in the LPL Group Ascend, initially scheduled for August 12 at 7:00AM ET. This market will resolve to \"Bilibili Gaming\" if Bilibili Gaming win the match against JD Gaming. This market will resolve to \"JD Gaming\" if JD Gaming win the match against Bilibili Gaming. If the match is canceled (not played at all), ends in a tie, or is delayed beyond 7 days from the scheduled date without a winner determined, this market will reso",
+    "category": "sports",
+    "yesPool": 12227.08,
+    "noPool": 1210481.22,
+    "cpmmRy": 12727.08,
+    "cpmmRn": 1210981.22
+  },
+  {
+    "title": "Will Satoshi move any Bitcoin in 2026?",
+    "description": "This market will resolve to “Yes” if any wallet labeled as belonging to Satoshi Nakamoto on Arkham’s Intel Explorer shows an “Outflow” or “Swaps” transaction at any time between January 9, 2026, 1:00 PM ET and December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to “No.” The resolution source for this market is Arkham’s Intel Explorer, specifically the entity page for Satoshi Nakamoto available at https://intel.arkm.com/explorer/entity/satoshi-nakamoto If Arkham becomes permanentl",
+    "category": "crypto",
+    "yesPool": 109837.55,
+    "noPool": 2252260.2,
+    "cpmmRy": 110337.55,
+    "cpmmRn": 2252760.2
+  },
+  {
+    "title": "Will Count Binface win the Clacton by-election?",
+    "description": "A by-election for the United Kingdom parliamentary constituency of Clacton is expected to be held soon following the announced resignation of incumbent Nigel Farage. This market will resolve according to the candidate who wins the Clacton parliamentary by-election. If the election results are not known definitively by June 30, 2027, 11:59 PM ET, this market will resolve to \"Other\". The resolution source for this market will be a consensus of credible reporting. In case of ambiguity, this market ",
+    "category": "politics",
+    "yesPool": 15005.25,
+    "noPool": 1414066.44,
+    "cpmmRy": 15505.25,
+    "cpmmRn": 1414566.44
+  },
+  {
+    "title": "Will Renan Santos finish in second place in the first round of the 2026 Brazilian presidential election?",
+    "description": "A presidential election is scheduled to take place in Brazil on October 4, 2026. This market will resolve according to the listed candidate who receives the second-most valid votes in the first round of this election. The named candidates will be primarily ranked by the number of valid votes received in the specified election. If two or more candidates are tied on valid votes, ties will be broken by alphabetical order of the candidates'' last names. This market will resolve to the candidate that",
+    "category": "politics",
+    "yesPool": 47238.22,
+    "noPool": 502043.43,
+    "cpmmRy": 47738.22,
+    "cpmmRn": 502543.43
+  },
+  {
+    "title": "Epstein client list released by October 31?",
+    "description": "This market will resolve to “Yes” if files which were not previously public and which pertain to the illegal activities of Jeffrey Epstein are made public by October 31, 2026, 11:59 PM ET, and those files contain a list of individuals associated with Epstein in connection with his illegal activities, including but not limited to sex trafficking or related crimes. Otherwise, this market will resolve to “No.” To qualify, the files must contain names in a context equivalent to what is commonly refe",
+    "category": "politics",
+    "yesPool": 60,
+    "noPool": 940,
+    "cpmmRy": 560,
+    "cpmmRn": 1440
+  }
+]

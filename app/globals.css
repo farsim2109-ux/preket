@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0b0b0f;
+  --foreground: #f4f4f5;
+  --card: #13131a;
+  --card-border: #2a2a35;
+  --muted: #71717a;
+  --accent: #3b82f6;
+  --yes: #22c55e;
+  --no: #ef4444;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(16, 185, 129, 0.06), transparent);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  @keyframes marketing-marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .marketing-marquee {
+    animation: marketing-marquee 40s linear infinite;
+  }
+}

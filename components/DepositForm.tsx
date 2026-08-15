@@ -20,8 +20,14 @@ interface ChainInfo {
 }
 
 export function DepositForm() {
-  const [network, setNetwork] = useState<NetworkId>("polygon");
-  const [token, setToken] = useState<DepositTokenId>("USDC");
+  const [network, setNetwork] = useState<NetworkId>(() => {
+    if (typeof window === "undefined") return "polygon";
+    return (sessionStorage.getItem("deposit_network") as NetworkId) || "polygon";
+  });
+  const [token, setToken] = useState<DepositTokenId>(() => {
+    if (typeof window === "undefined") return "USDC";
+    return (sessionStorage.getItem("deposit_token") as DepositTokenId) || "USDC";
+  });
   const [txHash, setTxHash] = useState("");
   const [chainInfo, setChainInfo] = useState<ChainInfo | null>(null);
   const [copied, setCopied] = useState(false);
@@ -68,7 +74,10 @@ export function DepositForm() {
     pollRef.current = 0;
     if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
     const tokens = getVisibleTokens(CHAINS[net]);
-    setToken(tokens[0]?.id ?? "NATIVE");
+    const nextToken = tokens[0]?.id ?? "NATIVE";
+    setToken(nextToken);
+    sessionStorage.setItem("deposit_network", net);
+    sessionStorage.setItem("deposit_token", nextToken);
   }
 
   async function copyAddress() {
@@ -193,14 +202,20 @@ export function DepositForm() {
           <TokenPill
             active={token === "NATIVE"}
             label={chain.nativeToken}
-            onClick={() => setToken("NATIVE")}
+            onClick={() => {
+              setToken("NATIVE");
+              sessionStorage.setItem("deposit_token", "NATIVE");
+            }}
           />
           {visibleTokens.map((t) => (
             <TokenPill
               key={t.id}
               active={token === t.id || (token === "USDC" && t.id === "USDC")}
               label={t.symbol}
-              onClick={() => setToken(t.id)}
+              onClick={() => {
+                setToken(t.id);
+                sessionStorage.setItem("deposit_token", t.id);
+              }}
             />
           ))}
         </div>

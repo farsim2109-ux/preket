@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { CHAINS, getVisibleTokens } from "@/lib/blockchain/chains";
 import type { DepositTokenId } from "@/lib/blockchain/chains";
 import type { NetworkId } from "@/lib/types";
@@ -20,14 +21,13 @@ interface ChainInfo {
 }
 
 export function DepositForm() {
-  const [network, setNetwork] = useState<NetworkId>(() => {
-    if (typeof window === "undefined") return "polygon";
-    return (sessionStorage.getItem("deposit_network") as NetworkId) || "polygon";
-  });
-  const [token, setToken] = useState<DepositTokenId>(() => {
-    if (typeof window === "undefined") return "USDC";
-    return (sessionStorage.getItem("deposit_token") as DepositTokenId) || "USDC";
-  });
+  const router = useRouter();
+  // Start with the same defaults the server renders, so the first client
+  // render matches the server HTML exactly. Reading sessionStorage directly
+  // inside useState's initializer runs during hydration and can diverge from
+  // what the server sent — that's a React hydration mismatch, not a fix.
+  const [network, setNetwork] = useState<NetworkId>("polygon");
+  const [token, setToken] = useState<DepositTokenId>("USDC");
   const [txHash, setTxHash] = useState("");
   const [chainInfo, setChainInfo] = useState<ChainInfo | null>(null);
   const [copied, setCopied] = useState(false);
@@ -55,6 +55,16 @@ export function DepositForm() {
       setMessage(data.error ?? "Failed to load deposit address");
       setStatus("error");
     }
+  }, []);
+
+  useEffect(() => {
+    const savedNetwork = sessionStorage.getItem("deposit_network") as NetworkId | null;
+    const savedToken = sessionStorage.getItem("deposit_token") as DepositTokenId | null;
+    if (savedNetwork) setNetwork(savedNetwork);
+    if (savedToken) setToken(savedToken);
+    // Runs once after mount (post-hydration), so this update happens on top
+    // of the already-hydrated, server-matching markup — no mismatch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -114,6 +124,7 @@ export function DepositForm() {
       if (typeof data.balance_usd === "number") setBalanceUsd(data.balance_usd);
       setTxHash("");
       pollRef.current = 0;
+      router.refresh(); // re-fetches server components (e.g. Navbar's balance) without a full reload
       return true;
     }
 

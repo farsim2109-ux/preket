@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { NavbarShell } from "@/components/NavbarShell";
 import { MarketingTopBar } from "@/components/MarketingTrust";
+import { SuppressExtensionWalletErrors } from "@/components/SuppressExtensionWalletErrors";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,6 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased`}>
+        <SuppressExtensionWalletErrors />
         <MarketingTopBar />
         <NavbarShell />
         <main className="min-h-[calc(100vh-4rem)]">{children}</main>

@@ -31,6 +31,62 @@ function clientFor(network: NetworkId) {
   });
 }
 
+/**
+ * Looks up internal native-currency transfers for a specific transaction via
+ * Alchemy's `alchemy_getAssetTransfers`, and returns the amount sent to
+ * `deposit` if this tx contains one. Returns null (never throws) if the RPC
+ * isn't Alchemy, the call fails, or no matching transfer is found — callers
+ * should treat that the same as "not found" and fall through to the existing
+ * error, not as a hard failure.
+ */
+async function findInternalNativeTransfer(
+  network: NetworkId,
+  txHash: `0x${string}`,
+  blockNumber: bigint,
+  deposit: string
+): Promise<{ amountCrypto: number } | null> {
+  const rpcUrl = getRpcUrl(network);
+  if (!rpcUrl.includes(".alchemy.com/")) return null; // method is Alchemy-specific
+
+  const blockHex = `0x${blockNumber.toString(16)}`;
+
+  try {
+    const res = await withRetry(async () => {
+      const r = await fetch(rpcUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "alchemy_getAssetTransfers",
+          params: [
+            {
+              fromBlock: blockHex,
+              toBlock: blockHex,
+              toAddress: deposit,
+              category: ["internal", "external"],
+              excludeZeroValue: true,
+            },
+          ],
+        }),
+      });
+      if (!r.ok) throw new Error(`Alchemy asset transfers HTTP ${r.status}`);
+      return r.json();
+    });
+
+    const transfers: Array<{ hash?: string; value?: number; to?: string }> = res?.result?.transfers ?? [];
+    const match = transfers.find(
+      (t) => t.hash?.toLowerCase() === txHash.toLowerCase() && t.to?.toLowerCase() === deposit && (t.value ?? 0) > 0
+    );
+    if (!match) return null;
+
+    // Alchemy returns native transfer `value` already decimal-adjusted (not wei).
+    return { amountCrypto: Number(match.value) };
+  } catch {
+    return null;
+  }
+}
+
 export async function verifyDepositTransaction(
   network: NetworkId,
   txHash: string,
@@ -138,6 +194,30 @@ export async function verifyDepositTransaction(
           },
         };
       }
+    }
+
+    // Top-level tx.to/tx.value only sees the outermost call. When the deposit
+    // arrives via a bridge/swap/proxy contract (e.g. a relay or smart-wallet
+    // route), the actual native transfer to our address happens as an
+    // *internal* transfer inside that contract call and never shows up in
+    // tx.to/tx.value — even though the funds genuinely land at the deposit
+    // address. Fall back to Alchemy's Asset Transfers API, which indexes
+    // internal transfers too, before giving up.
+    const internalMatch = await findInternalNativeTransfer(network, hash, receipt.blockNumber, deposit);
+    if (internalMatch && internalMatch.amountCrypto > 0) {
+      return {
+        ok: true,
+        transfer: {
+          to: getAddress(deposit as `0x${string}`),
+          amountCrypto: internalMatch.amountCrypto,
+          tokenSymbol: chain.nativeToken,
+          tokenId: "NATIVE",
+          coingeckoId: chain.nativeCoingeckoId,
+          confirmations,
+          requiredConfirmations: chain.requiredConfirmations,
+          isConfirmed: true,
+        },
+      };
     }
   }
 

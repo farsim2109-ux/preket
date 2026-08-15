@@ -19,10 +19,12 @@
 
 ## Deposits
 
-- **Confirmation defaults:** Polygon 12, BSC 12, Arbitrum 6, Base 6 (L2s use lower threshold).
+- **Confirmation defaults:** Polygon/BSC 15, Arbitrum/Base 30.
 - **Replay prevention:** Unique constraint on `deposits.tx_hash` + application check before any external API call.
-- **Pending txs:** Return HTTP 202 with `status: pending` when confirmations are insufficient.
-- **Token support:** Native token + one primary stablecoin per chain (POL/USDC on Polygon, BNB/USDT on BSC, USDC on Arbitrum/Base).
+- **Pending txs:** Return HTTP 202 with `status: pending` when confirmations are insufficient; frontend polls every 10s.
+- **Receive address:** Single `DEPOSIT_ADDRESS` env var (same EVM address on all chains).
+- **Token support:** Native + USDT + USDC on Polygon, BSC, Arbitrum, Base (also accepts bridged USDC.e on Polygon/Arbitrum).
+- **RPC:** Per-chain `POLYGON_RPC_URL` etc., or `ALCHEMY_API_KEY` fallback.
 - **Price oracle:** CoinGecko free API; optional API key for higher rate limits.
 
 ## Betting

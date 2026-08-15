@@ -1,96 +1,67 @@
+import { createPublicClient, erc20Abi, formatUnits, http, parseEventLogs } from "viem";
+import { arbitrum, base, bsc, polygon } from "viem/chains";
 import { withRetry } from "@/lib/utils";
-import { CHAINS, getAdminWallet, getAlchemyUrl, TRANSFER_EVENT_TOPIC, type ChainConfig } from "./chains";
+import {
+  CHAINS,
+  getDepositAddress,
+  getRpcUrl,
+  tokenMatchesSelection,
+  type DepositTokenId,
+} from "./chains";
 import type { NetworkId } from "@/lib/types";
 import { getAddress, isAddress } from "viem";
+
+const VIEM_CHAINS = { polygon, bsc, arbitrum, base } as const;
 
 export interface VerifiedTransfer {
   to: string;
   amountCrypto: number;
   tokenSymbol: string;
+  tokenId: DepositTokenId;
   coingeckoId: string;
   confirmations: number;
   requiredConfirmations: number;
   isConfirmed: boolean;
 }
 
-interface TxReceipt {
-  status: string;
-  blockNumber: string;
-  to: string | null;
-  value: string;
-  logs: Array<{ address: string; topics: string[]; data: string }>;
-}
-
-async function getLatestBlockNumber(network: NetworkId): Promise<number> {
-  const url = getAlchemyUrl(network);
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_blockNumber", params: [] }),
+function clientFor(network: NetworkId) {
+  return createPublicClient({
+    chain: VIEM_CHAINS[network],
+    transport: http(getRpcUrl(network)),
   });
-  const data = await res.json();
-  return parseInt(data.result, 16);
-}
-
-async function getTransactionReceipt(network: NetworkId, txHash: string): Promise<TxReceipt | null> {
-  const url = getAlchemyUrl(network);
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      jsonrpc: "2.0",
-      id: 1,
-      method: "eth_getTransactionReceipt",
-      params: [txHash],
-    }),
-  });
-  const data = await res.json();
-  return data.result ?? null;
-}
-
-function parseErc20Transfer(
-  log: { address: string; topics: string[]; data: string },
-  chain: ChainConfig
-): { to: string; amount: bigint; token: (typeof chain.tokens)[0] } | null {
-  if (log.topics[0]?.toLowerCase() !== TRANSFER_EVENT_TOPIC) return null;
-  const token = chain.tokens.find((t) => t.address.toLowerCase() === log.address.toLowerCase());
-  if (!token) return null;
-  if (log.topics.length < 3) return null;
-
-  const to = "0x" + log.topics[2].slice(26);
-  const amount = BigInt(log.data);
-  return { to, amount, token };
 }
 
 export async function verifyDepositTransaction(
   network: NetworkId,
-  txHash: string
+  txHash: string,
+  expectedToken?: DepositTokenId
 ): Promise<{ ok: true; transfer: VerifiedTransfer } | { ok: false; error: string; pending?: boolean }> {
   if (!/^0x[a-fA-F0-9]{64}$/.test(txHash)) {
     return { ok: false, error: "Invalid transaction hash format" };
   }
 
   const chain = CHAINS[network];
-  const adminWallet = getAdminWallet(network).toLowerCase();
+  const deposit = getDepositAddress().toLowerCase();
+  const hash = txHash as `0x${string}`;
+  const publicClient = clientFor(network);
 
-  let receipt: TxReceipt | null;
+  let receipt;
   try {
-    receipt = await withRetry(() => getTransactionReceipt(network, txHash));
+    receipt = await withRetry(() => publicClient.getTransactionReceipt({ hash }));
   } catch {
-    return { ok: false, error: "Failed to fetch transaction from blockchain API" };
+    return { ok: false, error: "Transaction not found. It may still be pending.", pending: true };
   }
 
   if (!receipt) {
     return { ok: false, error: "Transaction not found. It may still be pending.", pending: true };
   }
 
-  if (receipt.status !== "0x1") {
+  if (receipt.status !== "success") {
     return { ok: false, error: "Transaction failed on-chain" };
   }
 
-  const latestBlock = await withRetry(() => getLatestBlockNumber(network));
-  const txBlock = parseInt(receipt.blockNumber, 16);
-  const confirmations = latestBlock - txBlock + 1;
+  const latestBlock = await withRetry(() => publicClient.getBlockNumber());
+  const confirmations = Number(latestBlock - receipt.blockNumber) + 1;
   const isConfirmed = confirmations >= chain.requiredConfirmations;
 
   if (!isConfirmed) {
@@ -101,42 +72,37 @@ export async function verifyDepositTransaction(
     };
   }
 
-  // Check ERC-20 transfers in logs
-  for (const log of receipt.logs) {
-    const parsed = parseErc20Transfer(log, chain);
-    if (!parsed) continue;
+  const wantNative = !expectedToken || expectedToken === "NATIVE";
+  const wantErc20 = !expectedToken || expectedToken !== "NATIVE";
 
-    const toAddr = parsed.to.toLowerCase();
-    if (toAddr !== adminWallet) continue;
+  if (wantErc20) {
+    const transfers = parseEventLogs({
+      abi: erc20Abi,
+      logs: receipt.logs,
+      eventName: "Transfer",
+    });
 
-    const amountCrypto = Number(parsed.amount) / Math.pow(10, parsed.token.decimals);
-    if (amountCrypto <= 0) continue;
+    for (const log of transfers) {
+      const token = chain.tokens.find((t) => t.address.toLowerCase() === log.address.toLowerCase());
+      if (!token) continue;
+      if (expectedToken && !tokenMatchesSelection(token, expectedToken)) {
+        continue;
+      }
 
-    return {
-      ok: true,
-      transfer: {
-        to: getAddress(parsed.to),
-        amountCrypto,
-        tokenSymbol: parsed.token.symbol,
-        coingeckoId: parsed.token.coingeckoId,
-        confirmations,
-        requiredConfirmations: chain.requiredConfirmations,
-        isConfirmed: true,
-      },
-    };
-  }
+      const toAddr = log.args.to?.toLowerCase();
+      if (toAddr !== deposit) continue;
 
-  // Check native transfer
-  if (receipt.to?.toLowerCase() === adminWallet) {
-    const amountCrypto = parseInt(receipt.value, 16) / 1e18;
-    if (amountCrypto > 0) {
+      const amountCrypto = Number(formatUnits(log.args.value ?? BigInt(0), token.decimals));
+      if (amountCrypto <= 0) continue;
+
       return {
         ok: true,
         transfer: {
-          to: getAddress(receipt.to),
+          to: getAddress(log.args.to!),
           amountCrypto,
-          tokenSymbol: chain.nativeToken,
-          coingeckoId: chain.nativeCoingeckoId,
+          tokenSymbol: token.symbol,
+          tokenId: token.id,
+          coingeckoId: token.coingeckoId,
           confirmations,
           requiredConfirmations: chain.requiredConfirmations,
           isConfirmed: true,
@@ -145,9 +111,39 @@ export async function verifyDepositTransaction(
     }
   }
 
+  if (wantNative) {
+    let tx;
+    try {
+      tx = await withRetry(() => publicClient.getTransaction({ hash }));
+    } catch {
+      tx = null;
+    }
+
+    const to = tx?.to?.toLowerCase();
+    const value = tx?.value ?? BigInt(0);
+    if (to === deposit && value > BigInt(0)) {
+      const amountCrypto = Number(formatUnits(value, 18));
+      if (amountCrypto > 0) {
+        return {
+          ok: true,
+          transfer: {
+            to: getAddress(tx!.to!),
+            amountCrypto,
+            tokenSymbol: chain.nativeToken,
+            tokenId: "NATIVE",
+            coingeckoId: chain.nativeCoingeckoId,
+            confirmations,
+            requiredConfirmations: chain.requiredConfirmations,
+            isConfirmed: true,
+          },
+        };
+      }
+    }
+  }
+
   return {
     ok: false,
-    error: `No valid transfer to admin wallet found. Expected: ${getAdminWallet(network)}`,
+    error: `No valid ${expectedToken ?? "NATIVE/USDT/USDC"} transfer to deposit address found. Expected: ${getDepositAddress()}`,
   };
 }
 

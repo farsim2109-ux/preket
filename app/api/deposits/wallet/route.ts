@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { CHAINS, getAdminWallet } from "@/lib/blockchain/chains";
+import { CHAINS, getDepositAddress, getVisibleTokens } from "@/lib/blockchain/chains";
 import type { NetworkId } from "@/lib/types";
 
 export async function GET(request: Request) {
@@ -11,9 +11,26 @@ export async function GET(request: Request) {
   }
 
   try {
-    const address = getAdminWallet(network);
-    return NextResponse.json({ address, network });
-  } catch {
-    return NextResponse.json({ error: "Admin wallet not configured" }, { status: 500 });
+    const chain = CHAINS[network];
+    const address = getDepositAddress();
+    return NextResponse.json({
+      address,
+      network,
+      chainId: chain.chainId,
+      name: chain.name,
+      nativeToken: chain.nativeToken,
+      requiredConfirmations: chain.requiredConfirmations,
+      tokens: getVisibleTokens(chain).map((t) => ({
+        id: t.id,
+        symbol: t.symbol,
+        address: t.address,
+        decimals: t.decimals,
+      })),
+    });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Deposit address not configured" },
+      { status: 500 }
+    );
   }
 }

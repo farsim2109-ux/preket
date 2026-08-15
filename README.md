@@ -37,8 +37,10 @@ cp .env.example .env.local
 
 Required:
 - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`
-- `ADMIN_WALLET_*` — receive-only addresses per chain (no private keys)
-- `ALCHEMY_API_KEY` — for deposit verification
+- `DEPOSIT_ADDRESS` — single receive-only EVM address (all four chains)
+- `POLYGON_RPC_URL`, `BSC_RPC_URL`, `ARBITRUM_RPC_URL`, `BASE_RPC_URL` (or `ALCHEMY_API_KEY` fallback)
+
+Run migration `020_deposit_token_and_confirmed_at.sql` after earlier migrations.
 
 ### 4. Create an admin user
 
@@ -73,3 +75,13 @@ See [DECISIONS.md](./DECISIONS.md) for design choices and defaults.
 - Withdrawals are processed manually by admin off-platform
 - `tx_hash` uniqueness enforced at DB + application level
 - All balance changes go through Postgres RPC functions with row locks
+
+## Deposit verification checklist (manual, before live funds)
+
+1. Set `DEPOSIT_ADDRESS` and RPC URLs in `.env.local` / Vercel.
+2. Run all migrations through `020_deposit_token_and_confirmed_at.sql`.
+3. Send a small **USDC on Polygon** to `DEPOSIT_ADDRESS`; paste tx hash → confirm balance credits after confirmations.
+4. Resubmit the **same tx hash** → must reject (409, already used).
+5. Submit a tx sent to a **different address** → must reject without crediting.
+6. Submit a tx on the **wrong chain** selector → must reject.
+7. While confirmations are low → UI shows pending and auto-polls every ~10s.

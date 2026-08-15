@@ -41,18 +41,24 @@ export function DepositForm() {
   const visibleTokens = getVisibleTokens(chain);
 
   const loadChainInfo = useCallback(async (net: NetworkId) => {
-    const res = await fetch(`/api/deposits/wallet?network=${net}`);
-    const data = await res.json();
-    if (res.ok) {
-      setChainInfo({
-        address: data.address,
-        nativeToken: data.nativeToken,
-        requiredConfirmations: data.requiredConfirmations,
-        tokens: data.tokens ?? [],
-      });
-    } else {
+    try {
+      const res = await fetch(`/api/deposits/wallet?network=${net}`);
+      const data = await res.json();
+      if (res.ok) {
+        setChainInfo({
+          address: data.address,
+          nativeToken: data.nativeToken,
+          requiredConfirmations: data.requiredConfirmations,
+          tokens: data.tokens ?? [],
+        });
+      } else {
+        setChainInfo(null);
+        setMessage(data.error ?? "Failed to load deposit address");
+        setStatus("error");
+      }
+    } catch {
       setChainInfo(null);
-      setMessage(data.error ?? "Failed to load deposit address");
+      setMessage("Failed to load deposit address");
       setStatus("error");
     }
   }, []);
@@ -92,45 +98,56 @@ export function DepositForm() {
 
   async function copyAddress() {
     if (!chainInfo?.address) return;
-    await navigator.clipboard.writeText(chainInfo.address);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(chainInfo.address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setMessage("Copy failed");
+      setTimeout(() => setMessage((m) => (m === "Copy failed" ? "" : m)), 2000);
+    }
   }
 
   async function verifyOnce(hash: string): Promise<boolean> {
-    const res = await fetch("/api/deposits/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        network,
-        tx_hash: hash,
-        token,
-      }),
-    });
+    try {
+      const res = await fetch("/api/deposits/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          network,
+          tx_hash: hash,
+          token,
+        }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (res.status === 202) {
-      setStatus("pending");
-      setMessage(data.error || "Waiting for blockchain confirmations…");
-      return false;
-    }
+      if (res.status === 202) {
+        setStatus("pending");
+        setMessage(data.error || "Waiting for blockchain confirmations…");
+        return false;
+      }
 
-    if (res.ok && data.status === "verified") {
-      setStatus("confirmed");
-      setMessage(
-        `Deposit confirmed! Credited $${data.amount_usd} (${data.amount_crypto} ${data.token})`
-      );
-      if (typeof data.balance_usd === "number") setBalanceUsd(data.balance_usd);
-      setTxHash("");
-      pollRef.current = 0;
-      router.refresh(); // re-fetches server components (e.g. Navbar's balance) without a full reload
+      if (res.ok && data.status === "verified") {
+        setStatus("confirmed");
+        setMessage(
+          `Deposit confirmed! Credited $${data.amount_usd} (${data.amount_crypto} ${data.token})`
+        );
+        if (typeof data.balance_usd === "number") setBalanceUsd(data.balance_usd);
+        setTxHash("");
+        pollRef.current = 0;
+        router.refresh(); // re-fetches server components (e.g. Navbar's balance) without a full reload
+        return true;
+      }
+
+      setStatus("error");
+      setMessage(data.error || "Verification failed");
+      return true;
+    } catch {
+      setStatus("error");
+      setMessage("Verification request failed. Please try again.");
       return true;
     }
-
-    setStatus("error");
-    setMessage(data.error || "Verification failed");
-    return true;
   }
 
   async function runVerification(hash: string) {
@@ -138,32 +155,47 @@ export function DepositForm() {
     setMessage("Checking transaction on-chain…");
     pollRef.current = 0;
 
-    const done = await verifyOnce(hash);
-    if (done) {
-      setStatus((s) => (s === "verifying" ? "error" : s));
-      return;
-    }
-
-    const schedulePoll = () => {
-      pollRef.current += 1;
-      if (pollRef.current >= MAX_POLLS) {
-        setStatus("error");
-        setMessage("Transaction not confirmed after extended polling. Check the hash or try again later.");
+    try {
+      const done = await verifyOnce(hash);
+      if (done) {
+        setStatus((s) => (s === "verifying" ? "error" : s));
         return;
       }
-      pollTimerRef.current = setTimeout(async () => {
-        const finished = await verifyOnce(hash);
-        if (!finished) schedulePoll();
-      }, POLL_MS);
-    };
-    schedulePoll();
+
+      const schedulePoll = () => {
+        pollRef.current += 1;
+        if (pollRef.current >= MAX_POLLS) {
+          setStatus("error");
+          setMessage("Transaction not confirmed after extended polling. Check the hash or try again later.");
+          return;
+        }
+        pollTimerRef.current = setTimeout(async () => {
+          try {
+            const finished = await verifyOnce(hash);
+            if (!finished) schedulePoll();
+          } catch {
+            setStatus("error");
+            setMessage("Verification request failed. Please try again.");
+          }
+        }, POLL_MS);
+      };
+      schedulePoll();
+    } catch {
+      setStatus("error");
+      setMessage("Verification request failed. Please try again.");
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
     pollRef.current = 0;
-    await runVerification(txHash.trim());
+    try {
+      await runVerification(txHash.trim());
+    } catch {
+      setStatus("error");
+      setMessage("Verification request failed. Please try again.");
+    }
   }
 
   const depositAddress = chainInfo?.address;

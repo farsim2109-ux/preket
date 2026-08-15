@@ -34,22 +34,26 @@ export function ProfileForm({ email, initial }: ProfileFormProps) {
   async function handleAvatarUpload(file: File) {
     setUploading(true);
     setError("");
-    const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const path = `${initial.id}/avatar.${ext}`;
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+      const path = `${initial.id}/avatar.${ext}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from("avatars")
-      .upload(path, file, { upsert: true, contentType: file.type });
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true, contentType: file.type });
 
-    if (uploadError) {
-      setError(uploadError.message);
+      if (uploadError) {
+        setError(uploadError.message);
+        return;
+      }
+
+      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+      setAvatarUrl(`${data.publicUrl}?t=${Date.now()}`);
+    } catch {
+      setError("Failed to upload avatar. Please try again.");
+    } finally {
       setUploading(false);
-      return;
     }
-
-    const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-    setAvatarUrl(`${data.publicUrl}?t=${Date.now()}`);
-    setUploading(false);
   }
 
   async function handleSubmit(e: React.FormEvent) {

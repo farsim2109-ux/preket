@@ -4,7 +4,15 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { formatUsd } from "@/lib/types";
 import { probToCents, getCategoryMeta } from "@/lib/market-ui";
-import type { HistoryRow, PortfolioSummary, PositionRow } from "@/lib/portfolio";
+import type {
+  DepositHistoryRow,
+  HistoryRow,
+  PortfolioSummary,
+  PositionRow,
+  WithdrawalHistoryRow,
+} from "@/lib/portfolio";
+import { shortHex, txExplorerUrl } from "@/lib/explorers";
+import type { NetworkId } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
   ArrowDownLeft,
@@ -14,12 +22,16 @@ import {
   TrendingUp,
 } from "lucide-react";
 
-type Tab = "positions" | "history";
+type Tab = "positions" | "history" | "funds";
+
+const PAGE_SIZE = 15;
 
 interface PortfolioDashboardProps {
   summary: PortfolioSummary;
   positions: PositionRow[];
   history: HistoryRow[];
+  deposits: DepositHistoryRow[];
+  withdrawals: WithdrawalHistoryRow[];
 }
 
 function formatShares(n: number): string {
@@ -53,9 +65,17 @@ function PnlBadge({ value, pct }: { value: number; pct?: number }) {
   );
 }
 
-export function PortfolioDashboard({ summary, positions, history }: PortfolioDashboardProps) {
+export function PortfolioDashboard({
+  summary,
+  positions,
+  history,
+  deposits,
+  withdrawals,
+}: PortfolioDashboardProps) {
   const [tab, setTab] = useState<Tab>("positions");
   const [query, setQuery] = useState("");
+  const [historyVisible, setHistoryVisible] = useState(PAGE_SIZE);
+  const [fundsVisible, setFundsVisible] = useState(PAGE_SIZE);
 
   const filteredPositions = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -68,6 +88,27 @@ export function PortfolioDashboard({ summary, positions, history }: PortfolioDas
     if (!q) return history;
     return history.filter((h) => h.title.toLowerCase().includes(q));
   }, [history, query]);
+
+  const fundRows = useMemo(() => {
+    const rows = [
+      ...deposits.map((d) => ({ kind: "deposit" as const, at: d.createdAt, data: d })),
+      ...withdrawals.map((w) => ({ kind: "withdrawal" as const, at: w.createdAt, data: w })),
+    ].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+    const q = query.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter((row) => {
+      if (row.kind === "deposit") {
+        const d = row.data;
+        return (
+          d.network.toLowerCase().includes(q) ||
+          d.token.toLowerCase().includes(q) ||
+          d.txHash.toLowerCase().includes(q)
+        );
+      }
+      const w = row.data;
+      return w.network.toLowerCase().includes(q) || w.walletAddress.toLowerCase().includes(q);
+    });
+  }, [deposits, withdrawals, query]);
 
   return (
     <div className="space-y-6">
@@ -123,7 +164,8 @@ export function PortfolioDashboard({ summary, positions, history }: PortfolioDas
             {(
               [
                 ["positions", "Positions"],
-                ["history", "History"],
+                ["history", "Trades"],
+                ["funds", "Deposits & withdrawals"],
               ] as const
             ).map(([id, label]) => (
               <button
@@ -131,7 +173,7 @@ export function PortfolioDashboard({ summary, positions, history }: PortfolioDas
                 type="button"
                 onClick={() => setTab(id)}
                 className={cn(
-                  "px-4 py-2 rounded-lg text-sm font-semibold transition-colors",
+                  "px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-150",
                   tab === id ? "bg-zinc-800 text-white" : "text-zinc-500 hover:text-white"
                 )}
               >
@@ -235,97 +277,217 @@ export function PortfolioDashboard({ summary, positions, history }: PortfolioDas
               </table>
             </div>
           )
-        ) : filteredHistory.length === 0 ? (
-          <div className="p-12 text-center text-zinc-500 text-sm">No trades yet.</div>
+        ) : tab === "history" ? (
+          filteredHistory.length === 0 ? (
+            <div className="p-12 text-center text-zinc-500 text-sm">No trades yet.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-zinc-500 border-b border-[var(--card-border)]">
+                    <th className="px-4 py-3 font-medium min-w-[200px]">Market</th>
+                    <th className="px-4 py-3 font-medium">Outcome</th>
+                    <th className="px-4 py-3 font-medium">Type</th>
+                    <th className="px-4 py-3 font-medium text-right">Staked</th>
+                    <th className="px-4 py-3 font-medium text-right">Shares</th>
+                    <th className="px-4 py-3 font-medium">Status</th>
+                    <th className="px-4 py-3 font-medium text-right">Payout</th>
+                    <th className="px-4 py-3 font-medium text-right">Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredHistory.slice(0, historyVisible).map((h) => {
+                    const meta = getCategoryMeta(h.category);
+                    const Icon = meta.icon;
+                    const isBuy = h.tradeType === "buy";
+
+                    return (
+                      <tr
+                        key={h.id}
+                        className="border-b border-[var(--card-border)]/60 hover:bg-zinc-900/40 transition-colors duration-150"
+                      >
+                        <td className="px-4 py-3">
+                          <Link href={`/events/${h.eventId}`} className="flex items-center gap-2 group">
+                            <div
+                              className={cn(
+                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border",
+                                meta.border,
+                                meta.bg
+                              )}
+                            >
+                              <Icon className={cn("h-3.5 w-3.5", meta.accent)} />
+                            </div>
+                            <span className="font-medium group-hover:text-blue-400 transition-colors duration-150 line-clamp-1">
+                              {h.title}
+                            </span>
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={cn(
+                              "font-bold text-xs",
+                              h.outcome === "YES" ? "text-emerald-400" : "text-red-400"
+                            )}
+                          >
+                            {h.outcome}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={cn(
+                              "text-xs font-bold uppercase px-2 py-0.5 rounded",
+                              isBuy ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"
+                            )}
+                          >
+                            {isBuy ? "Buy" : "Sell"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right font-medium">{formatUsd(h.amount)}</td>
+                        <td className="px-4 py-3 text-right text-zinc-300">{formatShares(h.shares)}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={cn(
+                              "text-xs px-2 py-0.5 rounded-full capitalize",
+                              h.status === "won"
+                                ? "bg-green-500/20 text-green-400"
+                                : h.status === "lost"
+                                  ? "bg-red-500/20 text-red-400"
+                                  : "bg-blue-500/20 text-blue-400"
+                            )}
+                          >
+                            {h.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right text-zinc-300">
+                          {h.payoutUsd != null ? formatUsd(h.payoutUsd) : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-right text-zinc-500 text-xs whitespace-nowrap">
+                          {formatDate(h.createdAt)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              {filteredHistory.length > historyVisible && (
+                <div className="p-4 border-t border-[var(--card-border)] text-center">
+                  <button
+                    type="button"
+                    onClick={() => setHistoryVisible((n) => n + PAGE_SIZE)}
+                    className="text-sm text-blue-400 hover:text-blue-300 transition-colors duration-150"
+                  >
+                    Load more ({filteredHistory.length - historyVisible} remaining)
+                  </button>
+                </div>
+              )}
+            </div>
+          )
+        ) : fundRows.length === 0 ? (
+          <div className="p-12 text-center text-zinc-500 text-sm">No deposits or withdrawals yet.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-zinc-500 border-b border-[var(--card-border)]">
-                  <th className="px-4 py-3 font-medium min-w-[200px]">Market</th>
                   <th className="px-4 py-3 font-medium">Type</th>
-                  <th className="px-4 py-3 font-medium">Side</th>
-                  <th className="px-4 py-3 font-medium text-right">Shares</th>
-                  <th className="px-4 py-3 font-medium text-right">Price</th>
+                  <th className="px-4 py-3 font-medium">Date</th>
+                  <th className="px-4 py-3 font-medium">Network</th>
+                  <th className="px-4 py-3 font-medium">Details</th>
                   <th className="px-4 py-3 font-medium text-right">Amount</th>
-                  <th className="px-4 py-3 font-medium text-right">Fee</th>
                   <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium text-right">Time</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredHistory.map((h) => {
-                  const meta = getCategoryMeta(h.category);
-                  const Icon = meta.icon;
-                  const isBuy = h.tradeType === "buy";
-
-                  return (
-                    <tr
-                      key={h.id}
-                      className="border-b border-[var(--card-border)]/60 hover:bg-zinc-900/40 transition-colors"
-                    >
-                      <td className="px-4 py-3">
-                        <Link href={`/events/${h.eventId}`} className="flex items-center gap-2 group">
-                          <div
+                {fundRows.slice(0, fundsVisible).map((row) => {
+                  if (row.kind === "deposit") {
+                    const d = row.data;
+                    const network = d.network as NetworkId;
+                    return (
+                      <tr
+                        key={`d-${d.id}`}
+                        className="border-b border-[var(--card-border)]/60 hover:bg-zinc-900/40 transition-colors duration-150"
+                      >
+                        <td className="px-4 py-3 text-emerald-400 font-medium">Deposit</td>
+                        <td className="px-4 py-3 text-zinc-500 text-xs whitespace-nowrap">
+                          {formatDate(d.createdAt)}
+                        </td>
+                        <td className="px-4 py-3 capitalize">{d.network}</td>
+                        <td className="px-4 py-3">
+                          <span className="text-zinc-400">{d.token}</span>
+                          <span className="text-zinc-600 mx-1.5">·</span>
+                          <span className="text-zinc-400">{d.amountCrypto}</span>
+                          <span className="text-zinc-600 mx-1.5">·</span>
+                          <a
+                            href={txExplorerUrl(network, d.txHash)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-mono text-blue-400 hover:underline transition-colors duration-150"
+                          >
+                            {shortHex(d.txHash)}
+                          </a>
+                        </td>
+                        <td className="px-4 py-3 text-right font-medium">{formatUsd(d.amountUsd)}</td>
+                        <td className="px-4 py-3">
+                          <span
                             className={cn(
-                              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border",
-                              meta.border,
-                              meta.bg
+                              "text-xs px-2 py-0.5 rounded-full capitalize",
+                              d.status === "verified"
+                                ? "bg-green-500/20 text-green-400"
+                                : d.status === "pending"
+                                  ? "bg-yellow-500/20 text-yellow-400"
+                                  : "bg-red-500/20 text-red-400"
                             )}
                           >
-                            <Icon className={cn("h-3.5 w-3.5", meta.accent)} />
-                          </div>
-                          <span className="font-medium group-hover:text-blue-400 transition-colors line-clamp-1">
-                            {h.title}
+                            {d.status}
                           </span>
-                        </Link>
+                        </td>
+                      </tr>
+                    );
+                  }
+
+                  const w = row.data;
+                  return (
+                    <tr
+                      key={`w-${w.id}`}
+                      className="border-b border-[var(--card-border)]/60 hover:bg-zinc-900/40 transition-colors duration-150"
+                    >
+                      <td className="px-4 py-3 text-amber-400 font-medium">Withdrawal</td>
+                      <td className="px-4 py-3 text-zinc-500 text-xs whitespace-nowrap">
+                        {formatDate(w.createdAt)}
                       </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={cn(
-                            "text-xs font-bold uppercase px-2 py-0.5 rounded",
-                            isBuy ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"
-                          )}
-                        >
-                          {isBuy ? "Buy" : "Sell"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={cn(
-                            "font-bold text-xs",
-                            h.outcome === "YES" ? "text-emerald-400" : "text-red-400"
-                          )}
-                        >
-                          {h.outcome}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right text-zinc-300">{formatShares(h.shares)}</td>
-                      <td className="px-4 py-3 text-right">{h.price > 0 ? probToCents(h.price) : "—"}</td>
-                      <td className="px-4 py-3 text-right font-medium">{formatUsd(h.amount)}</td>
-                      <td className="px-4 py-3 text-right text-zinc-500">{formatUsd(h.fee)}</td>
+                      <td className="px-4 py-3 capitalize">{w.network}</td>
+                      <td className="px-4 py-3 font-mono text-zinc-400">{shortHex(w.walletAddress)}</td>
+                      <td className="px-4 py-3 text-right font-medium">{formatUsd(w.amountUsd)}</td>
                       <td className="px-4 py-3">
                         <span
                           className={cn(
                             "text-xs px-2 py-0.5 rounded-full capitalize",
-                            h.status === "won"
+                            w.status === "approved"
                               ? "bg-green-500/20 text-green-400"
-                              : h.status === "lost"
-                                ? "bg-red-500/20 text-red-400"
-                                : "bg-blue-500/20 text-blue-400"
+                              : w.status === "pending"
+                                ? "bg-yellow-500/20 text-yellow-400"
+                                : "bg-red-500/20 text-red-400"
                           )}
                         >
-                          {h.status}
+                          {w.status}
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-right text-zinc-500 text-xs whitespace-nowrap">
-                        {formatDate(h.createdAt)}
                       </td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
+            {fundRows.length > fundsVisible && (
+              <div className="p-4 border-t border-[var(--card-border)] text-center">
+                <button
+                  type="button"
+                  onClick={() => setFundsVisible((n) => n + PAGE_SIZE)}
+                  className="text-sm text-blue-400 hover:text-blue-300 transition-colors duration-150"
+                >
+                  Load more ({fundRows.length - fundsVisible} remaining)
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

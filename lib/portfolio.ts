@@ -17,6 +17,7 @@ export interface PortfolioBet {
   fee_usd: number;
   cpmm_per_pm?: number | null;
   status: BetStatus;
+  payout_usd?: number | null;
   created_at: string;
   events: {
     id: string;
@@ -59,6 +60,27 @@ export interface HistoryRow {
   amount: number;
   fee: number;
   status: BetStatus;
+  payoutUsd: number | null;
+  createdAt: string;
+}
+
+export interface DepositHistoryRow {
+  id: string;
+  network: string;
+  token: string;
+  amountCrypto: number;
+  amountUsd: number;
+  status: string;
+  txHash: string;
+  createdAt: string;
+}
+
+export interface WithdrawalHistoryRow {
+  id: string;
+  network: string;
+  walletAddress: string;
+  amountUsd: number;
+  status: string;
   createdAt: string;
 }
 
@@ -171,6 +193,7 @@ export function buildHistory(bets: PortfolioBet[]): HistoryRow[] {
       amount: Number(bet.amount_usd),
       fee: Number(bet.fee_usd ?? 0.02),
       status: bet.status,
+      payoutUsd: bet.payout_usd != null ? Number(bet.payout_usd) : null,
       createdAt: bet.created_at,
     }))
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());

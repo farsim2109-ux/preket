@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { CHAINS, getVisibleTokens } from "@/lib/blockchain/chains";
 import type { DepositTokenId } from "@/lib/blockchain/chains";
 import type { NetworkId } from "@/lib/types";
@@ -21,7 +20,6 @@ interface ChainInfo {
 }
 
 export function DepositForm() {
-  const router = useRouter();
   // Start with the same defaults the server renders, so the first client
   // render matches the server HTML exactly. Reading sessionStorage directly
   // inside useState's initializer runs during hydration and can diverge from
@@ -136,7 +134,6 @@ export function DepositForm() {
         if (typeof data.balance_usd === "number") setBalanceUsd(data.balance_usd);
         setTxHash("");
         pollRef.current = 0;
-        router.refresh(); // re-fetches server components (e.g. Navbar's balance) without a full reload
         return true;
       }
 
@@ -303,7 +300,10 @@ export function DepositForm() {
             </div>
           </div>
         ) : (
-          <p className="text-sm text-[var(--muted)]">Loading deposit address…</p>
+          <div className="min-h-[120px] flex items-center">
+            <div className="h-10 w-full max-w-md rounded-lg bg-zinc-800/80 animate-pulse" aria-hidden />
+            <span className="sr-only">Loading deposit address…</span>
+          </div>
         )}
       </div>
 

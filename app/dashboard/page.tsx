@@ -26,10 +26,23 @@ export default async function DashboardPage() {
   const { data: bets } = await supabase
     .from("bets")
     .select(
-      "id, event_id, outcome, amount_usd, entry_price, shares, trade_type, fee_usd, cpmm_per_pm, status, created_at, events(id, title, status, category, total_yes_pool, total_no_pool, cpmm_ry, cpmm_rn)"
+      "id, event_id, outcome, amount_usd, entry_price, shares, trade_type, fee_usd, cpmm_per_pm, payout_usd, status, created_at, events(id, title, status, category, total_yes_pool, total_no_pool, cpmm_ry, cpmm_rn)"
     )
     .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  const { data: deposits } = await supabase
+    .from("deposits")
+    .select("id, network, token, amount_crypto, amount_usd, status, tx_hash, created_at")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  const { data: withdrawals } = await supabase
+    .from("withdrawals")
+    .select("id, network, wallet_address, amount_usd, status, created_at")
+    .order("created_at", { ascending: false })
+    .limit(50);
 
   const portfolioBets: PortfolioBet[] = (bets ?? []).map((bet) => {
     const ev = bet.events;
@@ -38,6 +51,24 @@ export default async function DashboardPage() {
   });
   const positions = buildPositions(portfolioBets);
   const history = buildHistory(portfolioBets);
+  const depositHistory = (deposits ?? []).map((d) => ({
+    id: d.id,
+    network: d.network,
+    token: d.token ?? "NATIVE",
+    amountCrypto: Number(d.amount_crypto),
+    amountUsd: Number(d.amount_usd),
+    status: d.status,
+    txHash: d.tx_hash,
+    createdAt: d.created_at,
+  }));
+  const withdrawalHistory = (withdrawals ?? []).map((w) => ({
+    id: w.id,
+    network: w.network,
+    walletAddress: w.wallet_address,
+    amountUsd: Number(w.amount_usd),
+    status: w.status,
+    createdAt: w.created_at,
+  }));
   const cash = Number(profile?.balance_usd ?? 0);
   const summary = summarizePortfolio(cash, positions);
 
@@ -63,7 +94,13 @@ export default async function DashboardPage() {
 
       <MarketingTrustStrip className="mb-8" />
 
-      <PortfolioDashboard summary={summary} positions={positions} history={history} />
+      <PortfolioDashboard
+        summary={summary}
+        positions={positions}
+        history={history}
+        deposits={depositHistory}
+        withdrawals={withdrawalHistory}
+      />
     </div>
   );
 }

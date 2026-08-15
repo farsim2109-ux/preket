@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { formatUsd } from "@/lib/types";
@@ -25,6 +25,7 @@ interface NavbarProps {
 
 export function Navbar({ initialLoggedIn, initialProfile }: NavbarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const supabase = createClient();
   const [loggedIn, setLoggedIn] = useState(initialLoggedIn);
   const [profile, setProfile] = useState(initialProfile);
@@ -42,11 +43,11 @@ export function Navbar({ initialLoggedIn, initialProfile }: NavbarProps) {
         setLoggedIn(false);
         setProfile(null);
       } else if (event === "SIGNED_IN") {
-        window.location.reload();
+        router.refresh();
       }
     });
     return () => subscription.unsubscribe();
-  }, [supabase]);
+  }, [supabase, router]);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -100,7 +101,7 @@ export function Navbar({ initialLoggedIn, initialProfile }: NavbarProps) {
             <>
               <Link
                 href="/profile"
-                className="hidden sm:flex items-center gap-2 rounded-lg bg-[var(--card)] px-2 py-1.5 text-sm border border-[var(--card-border)] hover:border-zinc-500 transition-colors"
+                className="hidden sm:flex items-center gap-2 rounded-lg bg-[var(--card)] px-2 py-1.5 text-sm border border-[var(--card-border)] hover:border-zinc-500 transition-colors duration-150"
               >
                 {profile?.avatar_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -122,7 +123,7 @@ export function Navbar({ initialLoggedIn, initialProfile }: NavbarProps) {
               </div>
               <button
                 onClick={signOut}
-                className="flex items-center gap-1 text-sm text-[var(--muted)] hover:text-white"
+                className="flex items-center gap-1 text-sm text-[var(--muted)] hover:text-white transition-colors duration-150"
               >
                 <LogOut className="h-4 w-4" />
                 <span className="hidden sm:inline">Sign out</span>

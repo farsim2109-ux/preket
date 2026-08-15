@@ -126,7 +126,7 @@ export async function handleDepositVerifyRequest(request: Request, userId: strin
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!rateLimit(`deposit-verify:${userId}`, 10, 60_000)) {
+  if (!(await rateLimit(`deposit-verify:${userId}`, 10, 60))) {
     return NextResponse.json({ error: "Too many verification attempts. Try again in a minute." }, { status: 429 });
   }
 

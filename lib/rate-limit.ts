@@ -1,14 +1,15 @@
-const buckets = new Map<string, number[]>();
+import { createAdminClient } from "@/lib/supabase/admin";
 
-/** Returns true if the request is allowed. */
-export function rateLimit(key: string, limit: number, windowMs: number): boolean {
-  const now = Date.now();
-  const recent = (buckets.get(key) ?? []).filter((t) => now - t < windowMs);
-  if (recent.length >= limit) {
-    buckets.set(key, recent);
-    return false;
+export async function rateLimit(key: string, limit: number, windowSeconds: number): Promise<boolean> {
+  const admin = createAdminClient();
+  const { data, error } = await admin.rpc("check_rate_limit", {
+    p_key: key,
+    p_limit: limit,
+    p_window_seconds: windowSeconds,
+  });
+  if (error) {
+    console.error("rate limit check failed:", error.message);
+    return true; // fail open — don't block deposits if the limiter itself errors
   }
-  recent.push(now);
-  buckets.set(key, recent);
-  return true;
+  return data as boolean;
 }

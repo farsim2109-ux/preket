@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import type { Event } from "@/lib/types";
 import { formatUsd } from "@/lib/types";
 
@@ -15,6 +14,17 @@ interface WithdrawalRow {
   users: { email: string } | null;
 }
 
+async function callAdminRpc(fn: string, params: Record<string, unknown>) {
+  const res = await fetch("/api/admin/rpc", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ fn, params }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Request failed");
+  return data.data;
+}
+
 export function AdminPanel({
   events,
   withdrawals,
@@ -24,7 +34,6 @@ export function AdminPanel({
 }) {
   const [tab, setTab] = useState<"events" | "withdrawals">("events");
   const router = useRouter();
-  const supabase = createClient();
 
   return (
     <div>
@@ -50,9 +59,9 @@ export function AdminPanel({
       </div>
 
       {tab === "events" ? (
-        <EventsAdmin events={events} supabase={supabase} onRefresh={() => router.refresh()} />
+        <EventsAdmin events={events} onRefresh={() => router.refresh()} />
       ) : (
-        <WithdrawalsAdmin withdrawals={withdrawals} supabase={supabase} onRefresh={() => router.refresh()} />
+        <WithdrawalsAdmin withdrawals={withdrawals} onRefresh={() => router.refresh()} />
       )}
     </div>
   );
@@ -60,11 +69,9 @@ export function AdminPanel({
 
 function EventsAdmin({
   events,
-  supabase,
   onRefresh,
 }: {
   events: Event[];
-  supabase: ReturnType<typeof createClient>;
   onRefresh: () => void;
 }) {
   const [title, setTitle] = useState("");
@@ -82,35 +89,42 @@ function EventsAdmin({
     e.preventDefault();
     setLoading(true);
     setError("");
-    const { error: rpcError } = await supabase.rpc("create_event", {
-      p_title: title,
-      p_description: description,
-      p_category: category,
-    });
-    if (rpcError) setError(rpcError.message);
-    else {
+    try {
+      await callAdminRpc("create_event", {
+        p_title: title,
+        p_description: description,
+        p_category: category,
+      });
       setTitle("");
       setDescription("");
       onRefresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Request failed");
     }
     setLoading(false);
   }
 
   async function resolveEvent(id: string, outcome: "YES" | "NO") {
     if (!confirm(`Resolve this event as ${outcome}?`)) return;
-    const { error: rpcError } = await supabase.rpc("resolve_event", {
-      p_event_id: id,
-      p_winning_outcome: outcome,
-    });
-    if (rpcError) alert(rpcError.message);
-    else onRefresh();
+    try {
+      await callAdminRpc("resolve_event", {
+        p_event_id: id,
+        p_winning_outcome: outcome,
+      });
+      onRefresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Request failed");
+    }
   }
 
   async function cancelEvent(id: string) {
     if (!confirm("Cancel this event and refund all bets?")) return;
-    const { error: rpcError } = await supabase.rpc("cancel_event", { p_event_id: id });
-    if (rpcError) alert(rpcError.message);
-    else onRefresh();
+    try {
+      await callAdminRpc("cancel_event", { p_event_id: id });
+      onRefresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Request failed");
+    }
   }
 
   function openLiquidity(eventId: string) {
@@ -133,18 +147,18 @@ function EventsAdmin({
 
     setLiquidityLoading(true);
     setLiquidityError("");
-    const { error: rpcError } = await supabase.rpc("admin_add_liquidity", {
-      p_event_id: liquidityEventId,
-      p_yes_usd: yesUsd,
-      p_no_usd: noUsd,
-    });
-    if (rpcError) {
-      setLiquidityError(rpcError.message);
-    } else {
+    try {
+      await callAdminRpc("admin_add_liquidity", {
+        p_event_id: liquidityEventId,
+        p_yes_usd: yesUsd,
+        p_no_usd: noUsd,
+      });
       setLiquidityEventId(null);
       setYesLiquidity("");
       setNoLiquidity("");
       onRefresh();
+    } catch (err) {
+      setLiquidityError(err instanceof Error ? err.message : "Request failed");
     }
     setLiquidityLoading(false);
   }
@@ -319,24 +333,28 @@ function EventsAdmin({
 
 function WithdrawalsAdmin({
   withdrawals,
-  supabase,
   onRefresh,
 }: {
   withdrawals: WithdrawalRow[];
-  supabase: ReturnType<typeof createClient>;
   onRefresh: () => void;
 }) {
   async function approve(id: string) {
-    const { error } = await supabase.rpc("approve_withdrawal", { p_withdrawal_id: id });
-    if (error) alert(error.message);
-    else onRefresh();
+    try {
+      await callAdminRpc("approve_withdrawal", { p_withdrawal_id: id });
+      onRefresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Request failed");
+    }
   }
 
   async function reject(id: string) {
     if (!confirm("Reject and refund this withdrawal?")) return;
-    const { error } = await supabase.rpc("reject_withdrawal", { p_withdrawal_id: id });
-    if (error) alert(error.message);
-    else onRefresh();
+    try {
+      await callAdminRpc("reject_withdrawal", { p_withdrawal_id: id });
+      onRefresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Request failed");
+    }
   }
 
   if (!withdrawals.length) {

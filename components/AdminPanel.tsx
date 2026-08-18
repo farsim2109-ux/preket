@@ -37,7 +37,7 @@ export function AdminPanel({
   return (
     <div>
       <div className="flex gap-2 mb-6 border-b border-[var(--card-border)]">
-        {["events", "withdrawals"] as const}.map((t) => (
+        {(["events", "withdrawals"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}

@@ -9,6 +9,7 @@ A centralized hybrid prediction market platform — Polymarket-style UI with a W
 - **Atomic ledger:** All balance operations in Postgres transactions
 - **Admin dashboard:** Create/resolve events, approve withdrawals
 - **Supabase Auth:** Email/password with Row Level Security
+- **Security hardening:** Internal RPC permissions, protected auth redirects, rate-limited withdrawals, automatic timeout cleanup
 
 ## Setup
 
@@ -22,10 +23,10 @@ npm install
 ### 2. Supabase
 
 1. Create a project at [supabase.com](https://supabase.com)
-2. Run migrations in order via SQL Editor or Supabase CLI:
-   - `supabase/migrations/001_initial_schema.sql`
-   - `supabase/migrations/002_functions.sql`
-3. Copy your project URL and keys
+2. Run every migration in `supabase/migrations/` in order via Supabase CLI or the SQL Editor.
+3. Copy your project URL and keys.
+
+The repository currently includes migrations through `031_harden_withdrawal_requests.sql`.
 
 ### 3. Environment variables
 
@@ -39,8 +40,6 @@ Required:
 - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`
 - `DEPOSIT_ADDRESS` — single receive-only EVM address (all four chains)
 - `POLYGON_RPC_URL`, `BSC_RPC_URL`, `ARBITRUM_RPC_URL`, `BASE_RPC_URL` (or `ALCHEMY_API_KEY` fallback)
-
-Run migration `020_deposit_token_and_confirmed_at.sql` after earlier migrations.
 
 ### 4. Create an admin user
 
@@ -75,13 +74,24 @@ See [DECISIONS.md](./DECISIONS.md) for design choices and defaults.
 - Withdrawals are processed manually by admin off-platform
 - `tx_hash` uniqueness enforced at DB + application level
 - All balance changes go through Postgres RPC functions with row locks
+- Internal audit/authorization RPCs are not exposed to ordinary authenticated clients
+- Auth callback redirects are restricted to same-origin paths
+- Withdrawal requests validate network/address, are rate limited, and are capped at three pending requests per user
+- Withdrawal timeout cleanup runs automatically via pg_cron
 
 ## Deposit verification checklist (manual, before live funds)
 
 1. Set `DEPOSIT_ADDRESS` and RPC URLs in `.env.local` / Vercel.
-2. Run all migrations through `020_deposit_token_and_confirmed_at.sql`.
+2. Run all migrations in order.
 3. Send a small **USDC on Polygon** to `DEPOSIT_ADDRESS`; paste tx hash → confirm balance credits after confirmations.
 4. Resubmit the **same tx hash** → must reject (409, already used).
 5. Submit a tx sent to a **different address** → must reject without crediting.
 6. Submit a tx on the **wrong chain** selector → must reject.
 7. While confirmations are low → UI shows pending and auto-polls every ~10s.
+
+## Production security checklist
+
+- Enable Supabase leaked-password protection in Auth settings.
+- Upgrade Next.js from the unsupported 14.x line to a supported LTS release after running the full application test suite.
+- Run a fresh-database migration replay before production deployment.
+- Test concurrent buy/sell/withdrawal/resolution operations against a staging database before enabling real funds.

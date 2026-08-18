@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { syncAndGetProfile } from "@/lib/get-profile";
 import { redirect } from "next/navigation";
 import { WithdrawForm } from "@/components/WithdrawForm";
 import { formatUsd } from "@/lib/types";
@@ -13,7 +14,11 @@ export default async function WithdrawPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  const { data: profile } = await supabase.from("users").select("balance_usd").eq("id", user.id).single();
+  // Keep the withdrawal page on the same canonical profile/balance source
+  // used by the navbar and portfolio. The browser session may be blocked by
+  // RLS from reading the users row directly, while syncAndGetProfile uses the
+  // trusted server-side admin client and preserves the real account balance.
+  const profile = await syncAndGetProfile({ id: user.id, email: user.email ?? undefined });
   const balance = Number(profile?.balance_usd ?? 0);
 
   return (

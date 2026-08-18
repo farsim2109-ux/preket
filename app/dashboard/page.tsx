@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { syncAndGetProfile } from "@/lib/get-profile";
 import { redirect } from "next/navigation";
 import { PortfolioDashboard } from "@/components/PortfolioDashboard";
+import { WithdrawalStatusToast } from "@/components/WithdrawalStatusToast";
 import {
   buildHistory,
   buildPositions,
@@ -79,9 +80,11 @@ export default async function DashboardPage() {
   }));
   const cash = Number(profile?.balance_usd ?? 0);
   const summary = summarizePortfolio(cash, positions);
+  const latestWithdrawal = withdrawalHistory[0] ?? null;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
+      <WithdrawalStatusToast withdrawal={latestWithdrawal} />
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold">Portfolio</h1>

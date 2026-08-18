@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import type { Event } from "@/lib/types";
 import { formatUsd } from "@/lib/types";
 
@@ -14,15 +15,13 @@ interface WithdrawalRow {
   users: { email: string } | null;
 }
 
+// IMPORTANT: call via the browser client (real auth.uid()), not the
+// service_role proxy route — see DECISIONS.md "Admin RPC access" note.
 async function callAdminRpc(fn: string, params: Record<string, unknown>) {
-  const res = await fetch("/api/admin/rpc", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ fn, params }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Request failed");
-  return data.data;
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc(fn, params);
+  if (error) throw new Error(error.message || "Request failed");
+  return data;
 }
 
 export function AdminPanel({
@@ -38,7 +37,7 @@ export function AdminPanel({
   return (
     <div>
       <div className="flex gap-2 mb-6 border-b border-[var(--card-border)]">
-        {(["events", "withdrawals"] as const).map((t) => (
+        {["events", "withdrawals"] as const}.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}

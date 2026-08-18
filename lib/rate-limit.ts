@@ -9,7 +9,8 @@ export async function rateLimit(key: string, limit: number, windowSeconds: numbe
   });
   if (error) {
     console.error("rate limit check failed:", error.message);
-    return true; // fail open — don't block deposits if the limiter itself errors
+    // Fail closed for security-sensitive operations when the limiter is unavailable.
+    return false;
   }
   return data as boolean;
 }

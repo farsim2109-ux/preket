@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { syncAndGetProfile } from "@/lib/get-profile";
 import { redirect } from "next/navigation";
 import { PortfolioDashboard } from "@/components/PortfolioDashboard";
@@ -32,17 +33,24 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false })
     .limit(100);
 
-  const { data: deposits } = await supabase
-    .from("deposits")
-    .select("id, network, token, amount_crypto, amount_usd, status, tx_hash, created_at")
-    .order("created_at", { ascending: false })
-    .limit(50);
-
-  const { data: withdrawals } = await supabase
-    .from("withdrawals")
-    .select("id, network, wallet_address, amount_usd, status, created_at")
-    .order("created_at", { ascending: false })
-    .limit(50);
+  // Fund history is read with the trusted server client and explicitly scoped
+  // to the authenticated user. This avoids an RLS/session mismatch hiding a
+  // user's real deposit/withdrawal records while keeping other users private.
+  const admin = createAdminClient();
+  const [{ data: deposits }, { data: withdrawals }] = await Promise.all([
+    admin
+      .from("deposits")
+      .select("id, network, token, amount_crypto, amount_usd, status, tx_hash, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    admin
+      .from("withdrawals")
+      .select("id, network, wallet_address, amount_usd, status, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(50),
+  ]);
 
   const portfolioBets: PortfolioBet[] = (bets ?? []).map((bet) => {
     const ev = bet.events;

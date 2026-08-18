@@ -4,6 +4,15 @@ import { NextResponse, type NextRequest } from "next/server";
 const protectedRoutes = ["/dashboard", "/deposit", "/withdraw", "/profile"];
 const adminRoutes = ["/admin"];
 
+function isBootstrapAdmin(email: string | undefined): boolean {
+  if (!email) return false;
+  const adminEmails = (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  return adminEmails.includes(email.toLowerCase());
+}
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -26,20 +35,37 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh session on every request
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
   const isProtected = protectedRoutes.some((r) => path.startsWith(r));
-  const isAdmin = adminRoutes.some((r) => path.startsWith(r));
+  const isAdminRoute = adminRoutes.some((r) => path.startsWith(r));
 
-  if ((isProtected || isAdmin) && !user) {
+  if ((isProtected || isAdminRoute) && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
     url.searchParams.set("redirect", path);
     return NextResponse.redirect(url);
+  }
+
+  if (isAdminRoute && user) {
+    if (isBootstrapAdmin(user.email)) {
+      return supabaseResponse;
+    }
+
+    const { data: profile } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profile?.role !== "admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/";
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

@@ -1,10 +1,10 @@
-import Script from "next/script";
-
 /** MetaMask (and similar) inject inpage.js; auto-reconnect can throw before React mounts. */
 export function SuppressExtensionWalletErrors() {
   return (
-    <Script id="suppress-extension-wallet-errors" strategy="beforeInteractive">
-      {`
+    <script
+      suppressHydrationWarning
+      dangerouslySetInnerHTML={{
+        __html: `
 (function () {
   function isWalletExtensionNoise(value) {
     var msg = String(
@@ -27,7 +27,8 @@ export function SuppressExtensionWalletErrors() {
     }
   });
 })();
-`}
-    </Script>
+`,
+      }}
+    />
   );
 }

@@ -1,6 +1,5 @@
 {
   "crons": [
-    { "path": "/api/cron/sync-polymarket-events", "schedule": "0 3 * * *" },
-    { "path": "/api/cron/check-polymarket-resolutions", "schedule": "*/30 * * * *" }
+    { "path": "/api/cron/sync-polymarket-events", "schedule": "0 3 * * *" }
   ]
 }

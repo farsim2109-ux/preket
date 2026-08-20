@@ -2,7 +2,8 @@ import type { Outcome } from "@/lib/types";
 
 export interface TradeRow {
   outcome: Outcome;
-  trade_type: "buy" | "sell";
+  // Older rows may not have trade_type populated. Those rows are historical buys.
+  trade_type?: "buy" | "sell" | null;
   shares: number | null;
 }
 
@@ -11,14 +12,13 @@ export function netShares(trades: TradeRow[], outcome: Outcome): number {
     .filter((t) => t.outcome === outcome)
     .reduce((sum, t) => {
       const sh = Number(t.shares ?? 0);
-      return sum + (t.trade_type === "buy" ? sh : -sh);
+      // Missing/null trade_type must never be interpreted as a sell.
+      const type = t.trade_type ?? "buy";
+      return sum + (type === "sell" ? -sh : sh);
     }, 0);
   return Math.max(0, Math.floor(raw * 1e6) / 1e6);
 }
 
 export function netPositions(trades: TradeRow[]) {
-  return {
-    yes: Math.max(0, netShares(trades, "YES")),
-    no: Math.max(0, netShares(trades, "NO")),
-  };
+  return { yes: netShares(trades, "YES"), no: netShares(trades, "NO") };
 }

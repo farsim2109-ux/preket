@@ -36,14 +36,9 @@ export function LiveBetForm(props: Props) {
 
   useEffect(() => {
     void refreshPositions();
+    const timer = window.setInterval(() => void refreshPositions(), 1500);
+    return () => window.clearInterval(timer);
   }, [refreshPositions]);
 
-  return (
-    <BetForm
-      {...props}
-      yesShares={positions.yes}
-      noShares={positions.no}
-      onTradeSuccess={refreshPositions}
-    />
-  );
+  return <BetForm {...props} yesShares={positions.yes} noShares={positions.no} />;
 }

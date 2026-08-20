@@ -6,39 +6,27 @@ import { createClient } from "@/lib/supabase/client";
 import { netPositions } from "@/lib/positions";
 
 type Props = {
-  eventId: string;
-  balance: number;
-  yesPool: number;
-  noPool: number;
-  cpmmRy: number;
-  cpmmRn: number;
-  yesCpmmPerPm: number;
-  noCpmmPerPm: number;
-  yesShares: number;
-  noShares: number;
+  eventId: string; balance: number; yesPool: number; noPool: number;
+  cpmmRy: number; cpmmRn: number; yesCpmmPerPm: number; noCpmmPerPm: number;
+  yesShares: number; noShares: number;
 };
 
 export function LiveBetForm(props: Props) {
   const [positions, setPositions] = useState({ yes: props.yesShares, no: props.noShares });
+  useEffect(() => setPositions({ yes: props.yesShares, no: props.noShares }), [props.yesShares, props.noShares]);
 
   const refreshPositions = useCallback(async () => {
     const supabase = createClient();
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) return;
-    const { data, error } = await supabase
-      .from("bets")
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data, error } = await supabase.from("bets")
       .select("outcome, trade_type, shares")
-      .eq("event_id", props.eventId)
-      .eq("user_id", auth.user.id)
-      .eq("status", "active");
-    if (!error) setPositions(netPositions(data ?? []));
+      .eq("event_id", props.eventId).eq("user_id", user.id).eq("status", "active");
+    if (error) throw error;
+    setPositions(netPositions(data ?? []));
   }, [props.eventId]);
 
-  useEffect(() => {
-    void refreshPositions();
-    const timer = window.setInterval(() => void refreshPositions(), 1500);
-    return () => window.clearInterval(timer);
-  }, [refreshPositions]);
+  useEffect(() => { void refreshPositions(); }, [refreshPositions]);
 
-  return <BetForm {...props} yesShares={positions.yes} noShares={positions.no} />;
+  return <BetForm {...props} yesShares={positions.yes} noShares={positions.no} onTradeComplete={refreshPositions} />;
 }

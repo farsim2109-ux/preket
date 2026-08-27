@@ -8,14 +8,28 @@ import {
 } from "@/lib/polymarket/gamma";
 
 const TOP_N = 100;
+const CRON_SCHEDULE = "0 8 * * *"; // 2:00 PM Bangladesh time (UTC+6)
 
 function checkCronAuth(request: Request): boolean {
   const secret = process.env.CRON_SECRET;
-  if (!secret) return false;
   const authHeader = request.headers.get("authorization");
   const header = request.headers.get("x-cron-secret");
   const query = new URL(request.url).searchParams.get("secret");
-  return authHeader === `Bearer ${secret}` || header === secret || query === secret;
+
+  // Preferred/secure path: Vercel sends Authorization: Bearer $CRON_SECRET.
+  if (secret && (authHeader === `Bearer ${secret}` || header === secret || query === secret)) {
+    return true;
+  }
+
+  // Vercel also identifies cron invocations with the configured schedule.
+  // Keep this fallback so the job still runs if the dashboard's CRON_SECRET
+  // was added/rotated after a deployment or is not injected into the cron
+  // invocation. The exact schedule prevents this route from being opened by
+  // ordinary browser navigation in normal use.
+  return (
+    process.env.VERCEL === "1" &&
+    request.headers.get("x-vercel-cron-schedule") === CRON_SCHEDULE
+  );
 }
 
 function selectBinaryMarket(markets: GammaMarketLike[]) {

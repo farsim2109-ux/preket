@@ -8,7 +8,7 @@ import {
 } from "@/lib/polymarket/gamma";
 
 const TOP_N = 100;
-const CRON_SCHEDULE = "0 8 * * *"; // 2:00 PM Bangladesh time (UTC+6)
+const CRON_SCHEDULE = "0 13 * * *"; // 7:00 PM Bangladesh time (UTC+6)
 
 function checkCronAuth(request: Request): boolean {
   const secret = process.env.CRON_SECRET;
@@ -16,28 +16,22 @@ function checkCronAuth(request: Request): boolean {
   const header = request.headers.get("x-cron-secret");
   const query = new URL(request.url).searchParams.get("secret");
 
-  // Preferred/secure path: Vercel sends Authorization: Bearer $CRON_SECRET.
   if (secret && (authHeader === `Bearer ${secret}` || header === secret || query === secret)) {
     return true;
   }
 
-  // Vercel also identifies cron invocations with the configured schedule.
-  // Keep this fallback so the job still runs if the dashboard's CRON_SECRET
-  // was added/rotated after a deployment or is not injected into the cron
-  // invocation. The exact schedule prevents this route from being opened by
-  // ordinary browser navigation in normal use.
   return (
     process.env.VERCEL === "1" &&
     request.headers.get("x-vercel-cron-schedule") === CRON_SCHEDULE
   );
 }
 
+type GammaMarketLike = Parameters<typeof getBinaryOutcomePrices>[0];
+
 function selectBinaryMarket(markets: GammaMarketLike[]) {
   const binary = markets.filter((market) => getBinaryOutcomePrices(market));
   return binary.sort((a, b) => (Number(b.volume) || 0) - (Number(a.volume) || 0))[0] ?? null;
 }
-
-type GammaMarketLike = Parameters<typeof getBinaryOutcomePrices>[0];
 
 async function resolveOpenPolymarketEvents(admin: ReturnType<typeof createAdminClient>) {
   const { data: openEvents, error: fetchError } = await admin
@@ -65,9 +59,7 @@ async function resolveOpenPolymarketEvents(admin: ReturnType<typeof createAdminC
           const market = sourceConditionId
             ? gammaEvent?.markets?.find((item) => item.conditionId === sourceConditionId)
             : selectBinaryMarket(gammaEvent?.markets ?? []);
-          if (!market) {
-            return { kind: "error" as const, id: sourceId, error: "Matching market not found on Polymarket" };
-          }
+          if (!market) return { kind: "error" as const, id: sourceId, error: "Matching market not found on Polymarket" };
           if (!market.closed) return { kind: "open" as const, id: sourceId };
 
           const prices = getBinaryOutcomePrices(market);
@@ -85,11 +77,7 @@ async function resolveOpenPolymarketEvents(admin: ReturnType<typeof createAdminC
           if (error) return { kind: "error" as const, id: sourceId, error: error.message };
           return { kind: "resolved" as const, id: sourceId };
         } catch (err) {
-          return {
-            kind: "error" as const,
-            id: sourceId,
-            error: err instanceof Error ? err.message : "Unknown error",
-          };
+          return { kind: "error" as const, id: sourceId, error: err instanceof Error ? err.message : "Unknown error" };
         }
       })
     );
@@ -121,10 +109,7 @@ export async function GET(request: Request) {
   } catch (err) {
     const error = err instanceof Error ? err.message : "Unknown error";
     console.error("[polymarket-cron] fetch failed", { error });
-    return NextResponse.json(
-      { error: "Failed to fetch Polymarket events", details: error, startedAt },
-      { status: 502 }
-    );
+    return NextResponse.json({ error: "Failed to fetch Polymarket events", details: error, startedAt }, { status: 502 });
   }
 
   const results = {
@@ -174,10 +159,7 @@ export async function GET(request: Request) {
       else if (data) results.imported.push(ev.id);
       else results.skipped.push(ev.id);
     } catch (err) {
-      results.importErrors.push({
-        id: ev.id,
-        error: err instanceof Error ? err.message : "Unknown error",
-      });
+      results.importErrors.push({ id: ev.id, error: err instanceof Error ? err.message : "Unknown error" });
     }
   }
 
@@ -188,10 +170,7 @@ export async function GET(request: Request) {
     results.needsReview = resolution.needsReview;
     results.resolutionErrors = resolution.errors;
   } catch (err) {
-    results.resolutionErrors.push({
-      id: "_job",
-      error: err instanceof Error ? err.message : "Resolution check failed",
-    });
+    results.resolutionErrors.push({ id: "_job", error: err instanceof Error ? err.message : "Resolution check failed" });
   }
 
   const completedAt = new Date().toISOString();

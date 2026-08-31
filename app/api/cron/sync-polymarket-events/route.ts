@@ -8,9 +8,9 @@ import {
 } from "@/lib/polymarket/gamma";
 
 const TOP_N = 100;
-const CRON_SCHEDULE = "30 17 * * *"; // 11:30 PM Bangladesh time (UTC+6)
+const CRON_SCHEDULE = "40 17 * * *"; // 11:40 PM Bangladesh time (UTC+6)
 
-// The job fetches external markets and checks existing active markets.
+// This job fetches external markets and checks existing active markets.
 export const maxDuration = 60;
 
 function checkCronAuth(request: Request): boolean {
@@ -19,13 +19,12 @@ function checkCronAuth(request: Request): boolean {
   const header = request.headers.get("x-cron-secret");
   const query = new URL(request.url).searchParams.get("secret");
 
-  // Preferred: Vercel sends Authorization: Bearer <CRON_SECRET> to cron jobs.
+  // Preferred: Vercel Cron sends Authorization: Bearer <CRON_SECRET>.
   if (secret && (authHeader === `Bearer ${secret}` || header === secret || query === secret)) {
     return true;
   }
 
-  // Fallback for deployments where CRON_SECRET is not configured. Vercel's
-  // cron scheduler identifies the configured schedule with this header.
+  // Vercel Cron also identifies the configured schedule with this header.
   return (
     process.env.VERCEL === "1" &&
     request.headers.get("x-vercel-cron-schedule") === CRON_SCHEDULE
@@ -184,7 +183,6 @@ export async function GET(request: Request) {
     startedAt,
     completedAt,
     topN: TOP_N,
-    fetched: events.length,
     imported: results.imported.length,
     skipped: results.skipped.length,
     importErrors: results.importErrors.length,
@@ -195,5 +193,5 @@ export async function GET(request: Request) {
   };
 
   console.log("[polymarket-cron] completed", summary);
-  return NextResponse.json({ ok: results.importErrors.length === 0, summary, ...results });
+  return NextResponse.json({ ok: true, ...summary, results });
 }

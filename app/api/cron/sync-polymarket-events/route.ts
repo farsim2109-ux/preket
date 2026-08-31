@@ -81,3 +81,7 @@ export async function GET(request: Request) {
   const completedAt = new Date().toISOString();
   return NextResponse.json({ ok: true, startedAt, completedAt, topN: TOP_N, imported: results.imported.length, skipped: results.skipped.length, importErrors: results.importErrors.length, resolved: results.resolved.length, stillOpen: results.stillOpen.length, needsReview: results.needsReview.length, resolutionErrors: results.resolutionErrors.length, results });
 }
+
+export async function POST(request: Request) {
+  return GET(request);
+}

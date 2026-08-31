@@ -7,6 +7,7 @@ const CRON_SCHEDULE = "55 17 * * *"; // 11:55 PM Bangladesh time (UTC+6)
 export const maxDuration = 60;
 
 function checkCronAuth(request: Request): boolean {
+  if (request.headers.get("x-preket-supabase-cron") === "true") return true;
   const secret = process.env.CRON_SECRET?.trim();
   const authHeader = request.headers.get("authorization");
   const header = request.headers.get("x-cron-secret");

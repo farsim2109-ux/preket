@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/cron/sync-polymarket-events",
-      "schedule": "30 17 * * *"
+      "schedule": "40 17 * * *"
     }
   ]
 }

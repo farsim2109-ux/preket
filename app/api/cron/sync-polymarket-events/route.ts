@@ -1,15 +1,9 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import {
-  fetchEventById,
-  fetchNewTopEvents,
-  getBinaryOutcomePrices,
-  mapCategory,
-} from "@/lib/supabase/admin";
+import { fetchEventById, fetchNewTopEvents, getBinaryOutcomePrices, mapCategory } from "@/lib/polymarket/gamma";
 
 const TOP_N = 100;
 const CRON_SCHEDULE = "55 17 * * *"; // 11:55 PM Bangladesh time (UTC+6)
-
 export const maxDuration = 60;
 
 function checkCronAuth(request: Request): boolean {

@@ -8,18 +8,24 @@ import {
 } from "@/lib/polymarket/gamma";
 
 const TOP_N = 100;
-const CRON_SCHEDULE = "0 13 * * *"; // 7:00 PM Bangladesh time (UTC+6)
+const CRON_SCHEDULE = "30 17 * * *"; // 11:30 PM Bangladesh time (UTC+6)
+
+// The job fetches external markets and checks existing active markets.
+export const maxDuration = 60;
 
 function checkCronAuth(request: Request): boolean {
-  const secret = process.env.CRON_SECRET;
+  const secret = process.env.CRON_SECRET?.trim();
   const authHeader = request.headers.get("authorization");
   const header = request.headers.get("x-cron-secret");
   const query = new URL(request.url).searchParams.get("secret");
 
+  // Preferred: Vercel sends Authorization: Bearer <CRON_SECRET> to cron jobs.
   if (secret && (authHeader === `Bearer ${secret}` || header === secret || query === secret)) {
     return true;
   }
 
+  // Fallback for deployments where CRON_SECRET is not configured. Vercel's
+  // cron scheduler identifies the configured schedule with this header.
   return (
     process.env.VERCEL === "1" &&
     request.headers.get("x-vercel-cron-schedule") === CRON_SCHEDULE

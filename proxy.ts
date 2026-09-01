@@ -1,16 +1,20 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const OWNER_ADMIN_EMAIL = "farsim2109@gmail.com";
 const protectedRoutes = ["/dashboard", "/deposit", "/withdraw", "/profile"];
 const adminRoutes = ["/admin"];
 
 function isBootstrapAdmin(email: string | undefined): boolean {
   if (!email) return false;
+  const normalized = email.trim().toLowerCase();
+  if (normalized === OWNER_ADMIN_EMAIL) return true;
+
   const adminEmails = (process.env.ADMIN_EMAILS ?? "")
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
-  return adminEmails.includes(email.toLowerCase());
+  return adminEmails.includes(normalized);
 }
 
 export async function proxy(request: NextRequest) {
@@ -51,6 +55,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (isAdminRoute && user) {
+    // Owner admin is authorized independently of Vercel env configuration.
     if (isBootstrapAdmin(user.email)) {
       return supabaseResponse;
     }

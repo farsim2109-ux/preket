@@ -10,7 +10,9 @@ import {
 const TOP_N = 100;
 const MAX_INITIAL_LIQUIDITY_USD = 500;
 const MIN_INITIAL_LIQUIDITY_USD = 50;
-const RESOLUTION_CHECK_INTERVAL_MINUTES = 5;
+// Resolution is intentionally checked on every scheduler invocation.
+// The primary scheduler runs once per minute.
+const RESOLUTION_CHECK_INTERVAL_MINUTES = 1;
 export const maxDuration = 60;
 
 function checkCronAuth(request: Request): boolean {
@@ -251,19 +253,13 @@ async function runSync(request: Request) {
 
   try {
     const sync = await syncActiveEvents(admin, events);
-    const minute = new Date().getUTCMinutes();
-    const shouldResolve = minute % RESOLUTION_CHECK_INTERVAL_MINUTES === 0;
 
-    let resolved: string[] = [];
-    let needsReview: string[] = [];
-    let resolutionErrors: { id: string; error: string }[] = [];
-
-    if (shouldResolve) {
-      const resolution = await resolveRecentlyClosedPolymarketEvents(admin);
-      resolved = resolution.resolved;
-      needsReview = resolution.needsReview;
-      resolutionErrors = resolution.errors;
-    }
+    // The scheduler invokes this endpoint every minute, so resolution is also
+    // checked every minute. No separate resolution cadence is needed.
+    const resolution = await resolveRecentlyClosedPolymarketEvents(admin);
+    const resolved = resolution.resolved;
+    const needsReview = resolution.needsReview;
+    const resolutionErrors = resolution.errors;
 
     const completedAt = new Date().toISOString();
     return NextResponse.json({
@@ -275,7 +271,7 @@ async function runSync(request: Request) {
       updated: sync.updated.length,
       skipped: sync.skipped.length,
       importErrors: sync.importErrors.length,
-      resolutionChecked: shouldResolve,
+      resolutionChecked: true,
       resolved: resolved.length,
       needsReview: needsReview.length,
       resolutionErrors: resolutionErrors.length,

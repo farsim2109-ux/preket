@@ -241,6 +241,7 @@ async function runSync(request: Request) {
     events = await fetchNewTopEvents(TOP_N);
   } catch (err) {
     const error = err instanceof Error ? err.message : "Unknown error";
+    console.error(`[Polymarket Sync] ${startedAt} | FETCH_FAILED | error=${error}`);
     return NextResponse.json(
       {
         error: "Failed to fetch Polymarket events",
@@ -262,6 +263,21 @@ async function runSync(request: Request) {
     const resolutionErrors = resolution.errors;
 
     const completedAt = new Date().toISOString();
+    const durationMs = Date.now() - new Date(startedAt).getTime();
+
+    // Structured one-line summary: this is intentionally emitted on EVERY
+    // successful scheduler invocation so Vercel Runtime Logs show exactly
+    // what happened during each minute.
+    console.log(
+      `[Polymarket Sync] ${completedAt} | status=OK | fetched=${events.length} | imported=${sync.imported.length} | updated=${sync.updated.length} | skipped=${sync.skipped.length} | import_errors=${sync.importErrors.length} | resolved=${resolved.length} | needs_review=${needsReview.length} | resolution_errors=${resolutionErrors.length} | duration_ms=${durationMs}`,
+    );
+
+    if (sync.imported.length) console.log(`[Polymarket Sync] imported_ids=${sync.imported.join(",")}`);
+    if (sync.updated.length) console.log(`[Polymarket Sync] updated_ids=${sync.updated.join(",")}`);
+    if (resolved.length) console.log(`[Polymarket Sync] resolved_ids=${resolved.join(",")}`);
+    if (sync.importErrors.length) console.error(`[Polymarket Sync] import_errors=${JSON.stringify(sync.importErrors)}`);
+    if (resolutionErrors.length) console.error(`[Polymarket Sync] resolution_errors=${JSON.stringify(resolutionErrors)}`);
+
     return NextResponse.json({
       ok: true,
       startedAt,
@@ -287,10 +303,13 @@ async function runSync(request: Request) {
       },
     });
   } catch (err) {
+    const error = err instanceof Error ? err.message : "Unknown error";
+    const durationMs = Date.now() - new Date(startedAt).getTime();
+    console.error(`[Polymarket Sync] ${new Date().toISOString()} | status=FAILED | duration_ms=${durationMs} | error=${error}`);
     return NextResponse.json(
       {
         error: "Polymarket sync failed",
-        details: err instanceof Error ? err.message : "Unknown error",
+        details: error,
         startedAt,
       },
       { status: 500 },

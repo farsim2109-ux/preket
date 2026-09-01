@@ -23,11 +23,21 @@ export interface GammaEvent {
   markets: GammaMarket[];
 }
 
-export async function fetchNewTopEvents(limit: number): Promise<GammaEvent[]> {
-  const url = `${GAMMA_BASE}/events?active=true&closed=false&order=volume&ascending=false&limit=${limit}`;
+async function fetchEvents(url: string): Promise<GammaEvent[]> {
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`Gamma API error: ${res.status}`);
   return res.json();
+}
+
+export async function fetchNewTopEvents(limit: number): Promise<GammaEvent[]> {
+  const url = `${GAMMA_BASE}/events?active=true&closed=false&order=volume&ascending=false&limit=${limit}`;
+  return fetchEvents(url);
+}
+
+/** Recently closed events are fetched in one batch so resolution does not require one HTTP request per event. */
+export async function fetchRecentlyClosedEvents(limit: number): Promise<GammaEvent[]> {
+  const url = `${GAMMA_BASE}/events?closed=true&order=closed_time&ascending=false&limit=${limit}`;
+  return fetchEvents(url);
 }
 
 export async function fetchEventById(id: string): Promise<GammaEvent | null> {

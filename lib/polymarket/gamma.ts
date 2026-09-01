@@ -34,10 +34,28 @@ export async function fetchNewTopEvents(limit: number): Promise<GammaEvent[]> {
   return fetchEvents(url);
 }
 
-/** Recently closed events are fetched in one batch so resolution does not require one HTTP request per event. */
+/**
+ * Fetch recently closed events using Gamma's supported date ordering.
+ * Keep a compatibility fallback because Gamma has changed accepted order
+ * fields over time; a 422 from one ordering must not take down the scheduler.
+ */
 export async function fetchRecentlyClosedEvents(limit: number): Promise<GammaEvent[]> {
-  const url = `${GAMMA_BASE}/events?closed=true&order=closed_time&ascending=false&limit=${limit}`;
-  return fetchEvents(url);
+  const urls = [
+    `${GAMMA_BASE}/events?closed=true&order=endDate&ascending=false&limit=${limit}`,
+    `${GAMMA_BASE}/events?closed=true&order=updatedAt&ascending=false&limit=${limit}`,
+    `${GAMMA_BASE}/events?closed=true&limit=${limit}`,
+  ];
+
+  let lastError: Error | null = null;
+  for (const url of urls) {
+    try {
+      return await fetchEvents(url);
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error("Unknown Gamma API error");
+    }
+  }
+
+  throw lastError ?? new Error("Gamma API error while fetching closed events");
 }
 
 export async function fetchEventById(id: string): Promise<GammaEvent | null> {

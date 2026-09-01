@@ -16,10 +16,7 @@ const RESOLUTION_CHECK_INTERVAL_MINUTES = 1;
 export const maxDuration = 60;
 
 function checkCronAuth(request: Request): boolean {
-  // Primary scheduler: Supabase pg_cron -> pg_net.
   if (request.headers.get("x-preket-supabase-cron") === "true") return true;
-
-  // Keep the existing secret-based path available for manual/operational triggers.
   const secret = process.env.CRON_SECRET?.trim();
   const authHeader = request.headers.get("authorization");
   const header = request.headers.get("x-cron-secret");
@@ -78,10 +75,7 @@ async function resolveRecentlyClosedPolymarketEvents(
         : selectBinaryMarket(gammaEvent.markets ?? []);
 
       if (!market) {
-        errors.push({
-          id: sourceId,
-          error: "Matching market not found on Polymarket",
-        });
+        errors.push({ id: sourceId, error: "Matching market not found on Polymarket" });
         continue;
       }
 
@@ -107,10 +101,7 @@ async function resolveRecentlyClosedPolymarketEvents(
       if (error) errors.push({ id: sourceId, error: error.message });
       else resolved.push(sourceId);
     } catch (err) {
-      errors.push({
-        id: sourceId,
-        error: err instanceof Error ? err.message : "Unknown error",
-      });
+      errors.push({ id: sourceId, error: err instanceof Error ? err.message : "Unknown error" });
     }
   }
 
@@ -126,14 +117,18 @@ async function syncActiveEvents(
     updated: [] as string[],
     skipped: [] as string[],
     importErrors: [] as { id: string; error: string }[],
+    skipReasons: {
+      noBinaryMarket: [] as string[],
+      noPrices: [] as string[],
+      unchangedExisting: [] as string[],
+      rpcReturnedFalse: [] as string[],
+    },
   };
 
   const sourceIds = events.map((event) => event.id);
   const { data: existingRows, error: existingError } = await admin
     .from("events")
-    .select(
-      "id, source_event_id, source_condition_id, title, description, category",
-    )
+    .select("id, source_event_id, source_condition_id, title, description, category")
     .eq("source_platform", "polymarket")
     .in("source_event_id", sourceIds);
 
@@ -147,19 +142,19 @@ async function syncActiveEvents(
     const market = selectBinaryMarket(event.markets ?? []);
     if (!market) {
       results.skipped.push(event.id);
+      results.skipReasons.noBinaryMarket.push(event.id);
       continue;
     }
 
     const prices = getBinaryOutcomePrices(market);
     if (!prices) {
       results.skipped.push(event.id);
+      results.skipReasons.noPrices.push(event.id);
       continue;
     }
 
     const existing = existingBySourceId.get(event.id);
 
-    // Existing markets are never re-funded. We only refresh safe metadata so
-    // user betting pools and CPMM state remain untouched.
     if (existing) {
       const nextTitle = market.question || event.title;
       const nextDescription = (event.description || "").slice(0, 2000);
@@ -174,6 +169,7 @@ async function syncActiveEvents(
 
       if (!changed) {
         results.skipped.push(event.id);
+        results.skipReasons.unchangedExisting.push(event.id);
         continue;
       }
 
@@ -214,7 +210,10 @@ async function syncActiveEvents(
 
       if (error) results.importErrors.push({ id: event.id, error: error.message });
       else if (data) results.imported.push(event.id);
-      else results.skipped.push(event.id);
+      else {
+        results.skipped.push(event.id);
+        results.skipReasons.rpcReturnedFalse.push(event.id);
+      }
     } catch (err) {
       results.importErrors.push({
         id: event.id,
@@ -229,10 +228,7 @@ async function syncActiveEvents(
 async function runSync(request: Request) {
   const startedAt = new Date().toISOString();
   if (!checkCronAuth(request)) {
-    return NextResponse.json(
-      { error: "Forbidden", startedAt },
-      { status: 403 },
-    );
+    return NextResponse.json({ error: "Forbidden", startedAt }, { status: 403 });
   }
 
   const admin = createAdminClient();
@@ -242,21 +238,11 @@ async function runSync(request: Request) {
   } catch (err) {
     const error = err instanceof Error ? err.message : "Unknown error";
     console.error(`[Polymarket Sync] ${startedAt} | FETCH_FAILED | error=${error}`);
-    return NextResponse.json(
-      {
-        error: "Failed to fetch Polymarket events",
-        details: error,
-        startedAt,
-      },
-      { status: 502 },
-    );
+    return NextResponse.json({ error: "Failed to fetch Polymarket events", details: error, startedAt }, { status: 502 });
   }
 
   try {
     const sync = await syncActiveEvents(admin, events);
-
-    // The scheduler invokes this endpoint every minute, so resolution is also
-    // checked every minute. No separate resolution cadence is needed.
     const resolution = await resolveRecentlyClosedPolymarketEvents(admin);
     const resolved = resolution.resolved;
     const needsReview = resolution.needsReview;
@@ -264,13 +250,14 @@ async function runSync(request: Request) {
 
     const completedAt = new Date().toISOString();
     const durationMs = Date.now() - new Date(startedAt).getTime();
+    const skipSummary = Object.fromEntries(
+      Object.entries(sync.skipReasons).map(([key, ids]) => [key, ids.length]),
+    );
 
-    // Structured one-line summary: this is intentionally emitted on EVERY
-    // successful scheduler invocation so Vercel Runtime Logs show exactly
-    // what happened during each minute.
     console.log(
       `[Polymarket Sync] ${completedAt} | status=OK | fetched=${events.length} | imported=${sync.imported.length} | updated=${sync.updated.length} | skipped=${sync.skipped.length} | import_errors=${sync.importErrors.length} | resolved=${resolved.length} | needs_review=${needsReview.length} | resolution_errors=${resolutionErrors.length} | duration_ms=${durationMs}`,
     );
+    console.log(`[Polymarket Sync] skip_reasons=${JSON.stringify(skipSummary)}`);
 
     if (sync.imported.length) console.log(`[Polymarket Sync] imported_ids=${sync.imported.join(",")}`);
     if (sync.updated.length) console.log(`[Polymarket Sync] updated_ids=${sync.updated.join(",")}`);
@@ -292,6 +279,7 @@ async function runSync(request: Request) {
       needsReview: needsReview.length,
       resolutionErrors: resolutionErrors.length,
       maxInitialLiquidityUsd: MAX_INITIAL_LIQUIDITY_USD,
+      skipReasons: skipSummary,
       results: {
         imported: sync.imported,
         updated: sync.updated,
@@ -306,14 +294,7 @@ async function runSync(request: Request) {
     const error = err instanceof Error ? err.message : "Unknown error";
     const durationMs = Date.now() - new Date(startedAt).getTime();
     console.error(`[Polymarket Sync] ${new Date().toISOString()} | status=FAILED | duration_ms=${durationMs} | error=${error}`);
-    return NextResponse.json(
-      {
-        error: "Polymarket sync failed",
-        details: error,
-        startedAt,
-      },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Polymarket sync failed", details: error, startedAt }, { status: 500 });
   }
 }
 

@@ -3,18 +3,22 @@ import { createClient } from "@/lib/supabase/server";
 import { EventCard } from "@/components/EventCard";
 import { getCategoryMeta } from "@/lib/market-ui";
 import type { EventStatus } from "@/lib/types";
-import { Flame, TrendingUp, CheckCircle2, LayoutGrid, Search, X } from "lucide-react";
+import { Flame, TrendingUp, CheckCircle2, LayoutGrid, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { MarketingTrustStrip } from "@/components/MarketingTrust";
 
 export const dynamic = "force-dynamic";
 
+const PAGE_SIZE = 60;
+const MARKET_CATEGORIES = ["sports", "politics", "crypto", "tech", "entertainment", "finance", "business", "world", "general"];
+
 type StatusFilter = EventStatus | "all";
 
-function buildUrl(status: StatusFilter, category?: string, search?: string) {
+function buildUrl(status: StatusFilter, category?: string, search?: string, page?: number) {
   const params = new URLSearchParams();
   if (status !== "active") params.set("status", status);
   if (category) params.set("category", category);
   if (search?.trim()) params.set("q", search.trim());
+  if (page && page > 1) params.set("page", String(page));
   const q = params.toString();
   return `/events${q ? `?${q}` : ""}`;
 }
@@ -22,7 +26,7 @@ function buildUrl(status: StatusFilter, category?: string, search?: string) {
 export default async function EventsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; status?: string; q?: string }>;
+  searchParams: Promise<{ category?: string; status?: string; q?: string; page?: string }>;
 }) {
   const params = await searchParams;
   const supabase = await createClient();
@@ -35,11 +39,16 @@ export default async function EventsPage({
   const categoryFilter = params.category?.toLowerCase().trim();
   const searchQuery = (params.q ?? "").trim().slice(0, 100);
   const safeSearch = searchQuery.replace(/[%,_]/g, " ").replace(/\s+/g, " ").trim();
+  const requestedPage = Number.parseInt(params.page ?? "1", 10);
+  const currentPage = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+  const from = (currentPage - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
 
   let eventsQuery = supabase
     .from("events")
-    .select("*")
-    .order("created_at", { ascending: false });
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
   if (statusFilter !== "all") eventsQuery = eventsQuery.eq("status", statusFilter);
   if (categoryFilter) eventsQuery = eventsQuery.ilike("category", categoryFilter);
@@ -49,39 +58,35 @@ export default async function EventsPage({
     );
   }
 
-  let categoriesQuery = supabase.from("events").select("category");
-  if (statusFilter !== "all") categoriesQuery = categoriesQuery.eq("status", statusFilter);
-
-  // Category badges always show the number of ACTIVE events, even when the
-  // user is browsing Resolved/All. This makes the counts useful as navigation.
-  const activeCategoriesQuery = supabase
+  // Never fetch thousands of category rows just to calculate badges. Exact
+  // counts are cheap and, unlike a normal select, are not capped at 1,000 rows.
+  const activeCountQuery = supabase
     .from("events")
-    .select("category")
+    .select("id", { count: "exact", head: true })
     .eq("status", "active");
 
-  const [{ data: events }, { data: categoryRows }, { data: activeCategoryRows }] = await Promise.all([
+  const categoryCountQueries = MARKET_CATEGORIES.map((category) =>
+    supabase
+      .from("events")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "active")
+      .ilike("category", category),
+  );
+
+  const [{ data: events, count: eventsCount }, { count: activeCount }, ...categoryResults] = await Promise.all([
     eventsQuery,
-    categoriesQuery,
-    activeCategoriesQuery,
+    activeCountQuery,
+    ...categoryCountQueries,
   ]);
 
-  const categorySet = new Set<string>();
-  for (const row of categoryRows ?? []) {
-    if (row.category) categorySet.add(row.category.toLowerCase().trim());
-  }
-  for (const row of activeCategoryRows ?? []) {
-    if (row.category) categorySet.add(row.category.toLowerCase().trim());
-  }
+  const categories = MARKET_CATEGORIES.filter((category, index) => (categoryResults[index]?.count ?? 0) > 0);
+  const categoryCounts = new Map(
+    MARKET_CATEGORIES.map((category, index) => [category, categoryResults[index]?.count ?? 0]),
+  );
 
-  const categories = Array.from(categorySet).filter(Boolean).sort();
-  const categoryCounts = new Map<string, number>();
-  for (const row of activeCategoryRows ?? []) {
-    const key = row.category?.toLowerCase().trim();
-    if (!key) continue;
-    categoryCounts.set(key, (categoryCounts.get(key) ?? 0) + 1);
-  }
-
-  const activeCount = activeCategoryRows?.length ?? 0;
+  const totalPages = Math.max(1, Math.ceil((eventsCount ?? 0) / PAGE_SIZE));
+  const hasPrevious = currentPage > 1;
+  const hasNext = currentPage < totalPages;
 
   const statusTabs = [
     { id: "active" as const, label: "Active", icon: <Flame className="h-4 w-4" /> },
@@ -111,7 +116,7 @@ export default async function EventsPage({
           <div className="mt-4 flex gap-4 text-sm">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-emerald-400">
               <TrendingUp className="h-4 w-4" />
-              {activeCount} active
+              {activeCount ?? 0} active
             </span>
           </div>
           <MarketingTrustStrip className="mt-6" />
@@ -119,7 +124,6 @@ export default async function EventsPage({
       </div>
 
       <div className="mx-auto max-w-6xl px-4 py-8">
-        {/* Status tabs */}
         <div className="flex flex-wrap gap-2 mb-5">
           {statusTabs.map((tab) => (
             <Link
@@ -137,7 +141,6 @@ export default async function EventsPage({
           ))}
         </div>
 
-        {/* Search */}
         <form action="/events" method="get" className="mb-6">
           {categoryFilter && <input type="hidden" name="category" value={categoryFilter} />}
           {statusFilter !== "active" && <input type="hidden" name="status" value={statusFilter} />}
@@ -162,13 +165,12 @@ export default async function EventsPage({
           </div>
         </form>
 
-        {/* Category filters with live active counts */}
         {categories.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-8">
             <CategoryPill
               href={buildUrl(statusFilter, undefined, searchQuery)}
               label="All categories"
-              count={activeCount}
+              count={activeCount ?? 0}
               active={!params.category}
             />
             {categories.map((cat) => {
@@ -193,11 +195,43 @@ export default async function EventsPage({
             <p className="text-sm text-zinc-600 mt-1">{safeSearch ? `No markets matched “${safeSearch}”.` : emptyMessages[statusFilter].sub}</p>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {events.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
+          <>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {events.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="mt-10 flex items-center justify-between gap-4">
+                {hasPrevious ? (
+                  <Link
+                    href={buildUrl(statusFilter, categoryFilter, searchQuery, currentPage - 1)}
+                    className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900/50 px-4 py-2 text-sm font-medium text-zinc-300 hover:border-zinc-500 hover:text-white"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Link>
+                ) : (
+                  <span />
+                )}
+                <span className="text-sm text-zinc-500">
+                  Page {currentPage} of {totalPages} · {eventsCount ?? 0} markets
+                </span>
+                {hasNext ? (
+                  <Link
+                    href={buildUrl(statusFilter, categoryFilter, searchQuery, currentPage + 1)}
+                    className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900/50 px-4 py-2 text-sm font-medium text-zinc-300 hover:border-zinc-500 hover:text-white"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                ) : (
+                  <span />
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

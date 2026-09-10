@@ -37,6 +37,8 @@ export interface Event {
   total_no_pool: number;
   cpmm_ry: number;
   cpmm_rn: number;
+  source_event_id?: string | null;
+  polymarket_source_volume_usd?: number | null;
   created_at: string;
 }
 
@@ -76,11 +78,36 @@ export interface Withdrawal {
   created_at: string;
 }
 
-
 export function formatUsd(amount: number): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
 }
 
 export function formatPercent(prob: number): string {
   return `${(prob * 100).toFixed(1)}%`;
+}
+
+/**
+ * Stable display-only volume derived from the latest Polymarket source volume.
+ * It is intentionally high-looking and irregular, but is always strictly below
+ * the real source volume. It must never be used for balances, bets, liquidity,
+ * CPMM reserves, or settlement calculations.
+ */
+export function getDisplayVolume(sourceVolume: number | null | undefined, seed: string | null | undefined): number {
+  const volume = Number(sourceVolume);
+  if (!Number.isFinite(volume) || volume <= 0) return 0;
+
+  const input = seed || "preket";
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  // 72.00%–94.99% of source volume, stable per event.
+  const ratio = 0.72 + (Math.abs(hash) % 2300) / 10000;
+  let display = Math.floor(volume * ratio * 100) / 100;
+
+  // Strictly below source volume even after rounding.
+  if (display >= volume) display = Math.max(0, Math.floor((volume - 0.01) * 100) / 100);
+  return display;
 }

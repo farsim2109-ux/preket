@@ -10,12 +10,10 @@ export const dynamic = "force-dynamic";
 const PAGE_SIZE = 60;
 
 type StatusFilter = EventStatus | "all";
-
 type Topic = { label: string; terms: string[] };
+type TopicCount = Topic & { count: number };
 
-// These are user-facing market topics, intentionally separate from the
-// existing broad DB categories (sports/politics/etc.). A market can match
-// multiple topics without changing its stored category.
+// User-facing market topics. These stay separate from the broad DB categories.
 const TOPICS: Topic[] = [
   { label: "All", terms: [] },
   { label: "Trump", terms: ["trump"] },
@@ -107,19 +105,47 @@ export default async function EventsPage({
   }
 
   const { data: events, count: eventsCount } = await eventsQuery;
-  const { count: activeCount } = await supabase
+
+  // Keep the topic counters exact for ACTIVE markets. Each topic count is an
+  // independent head/count query, so PostgREST's row-return limit cannot hide
+  // markets from the numbers shown in the filter bar.
+  const topicCounts = await Promise.all(
+    TOPICS.map(async (topic): Promise<TopicCount> => {
+      if (!topic.terms.length) {
+        const { count } = await supabase
+          .from("events")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "active");
+        return { ...topic, count: count ?? 0 };
+      }
+
+      const { count } = await supabase
+        .from("events")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "active")
+        .or(topicWhere(topic.terms));
+
+      return { ...topic, count: count ?? 0 };
+    }),
+  );
+
+  const activeCount = topicCounts[0]?.count ?? 0;
+  const { count: resolvedCount } = await supabase
     .from("events")
     .select("id", { count: "exact", head: true })
-    .eq("status", "active");
+    .eq("status", "resolved");
+  const { count: allMarketsCount } = await supabase
+    .from("events")
+    .select("id", { count: "exact", head: true });
 
   const totalPages = Math.max(1, Math.ceil((eventsCount ?? 0) / PAGE_SIZE));
   const hasPrevious = currentPage > 1;
   const hasNext = currentPage < totalPages;
 
   const statusTabs = [
-    { id: "active" as const, label: "Active", icon: <Flame className="h-4 w-4" /> },
-    { id: "resolved" as const, label: "Resolved", icon: <CheckCircle2 className="h-4 w-4" /> },
-    { id: "all" as const, label: "All markets", icon: <LayoutGrid className="h-4 w-4" /> },
+    { id: "active" as const, label: "Active", count: activeCount, icon: <Flame className="h-4 w-4" /> },
+    { id: "resolved" as const, label: "Resolved", count: resolvedCount ?? 0, icon: <CheckCircle2 className="h-4 w-4" /> },
+    { id: "all" as const, label: "All markets", count: allMarketsCount ?? 0, icon: <LayoutGrid className="h-4 w-4" /> },
   ];
 
   return (
@@ -136,7 +162,7 @@ export default async function EventsPage({
               <p className="text-zinc-400 max-w-xl">Trade on real-world outcomes. Buy Yes or No — prices move with the crowd.</p>
             </div>
             <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-sm text-emerald-400">
-              <TrendingUp className="h-4 w-4" /> {activeCount ?? 0} active
+              <TrendingUp className="h-4 w-4" /> {activeCount} active
             </span>
           </div>
           <MarketingTrustStrip className="mt-6" />
@@ -145,18 +171,26 @@ export default async function EventsPage({
 
       <div className="sticky top-16 z-40 border-b border-[var(--card-border)] bg-[var(--background)]/95 backdrop-blur">
         <div className="mx-auto max-w-7xl px-4 py-3">
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-            {TOPICS.map((topic) => (
+          {/* Topics wrap to new rows instead of overflowing horizontally. */}
+          <div className="flex flex-wrap gap-2">
+            {topicCounts.map((topic) => (
               <Link
                 key={topic.label}
                 href={buildUrl(statusFilter, topic.label === "All" ? undefined : topic.label, safeSearch)}
-                className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-2 text-sm font-medium transition-colors ${
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-sm font-medium transition-colors ${
                   (topic.label === "All" && !selectedTopic) || selectedTopic?.label === topic.label
                     ? "border-white bg-white text-black"
                     : "border-zinc-700 bg-zinc-900/70 text-zinc-400 hover:border-zinc-500 hover:text-white"
                 }`}
               >
-                {topic.label}
+                <span>{topic.label}</span>
+                <span className={`text-xs tabular-nums ${
+                  (topic.label === "All" && !selectedTopic) || selectedTopic?.label === topic.label
+                    ? "text-zinc-600"
+                    : "text-zinc-500"
+                }`}>
+                  {topic.count}
+                </span>
               </Link>
             ))}
           </div>
@@ -165,7 +199,7 @@ export default async function EventsPage({
 
       <div className="mx-auto max-w-7xl px-4 py-6 md:py-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {statusTabs.map((tab) => (
               <Link
                 key={tab.id}
@@ -176,7 +210,11 @@ export default async function EventsPage({
                     : "border-zinc-700 bg-zinc-900/60 text-zinc-400 hover:border-zinc-500 hover:text-white"
                 }`}
               >
-                {tab.icon}{tab.label}
+                {tab.icon}
+                {tab.label}
+                <span className={`tabular-nums ${statusFilter === tab.id ? "text-zinc-600" : "text-zinc-500"}`}>
+                  {tab.count}
+                </span>
               </Link>
             ))}
           </div>
@@ -206,7 +244,7 @@ export default async function EventsPage({
           <div className="mt-5 flex items-center justify-between">
             <div>
               <h2 className="text-lg font-bold text-white">{selectedTopic.label}</h2>
-              <p className="text-sm text-zinc-500">Markets matching this topic</p>
+              <p className="text-sm text-zinc-500">{topicCounts.find((topic) => topic.label === selectedTopic.label)?.count ?? 0} active markets matching this topic</p>
             </div>
           </div>
         )}

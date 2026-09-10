@@ -134,107 +134,118 @@ async function syncActiveEvents(
     },
   };
 
-  const sourceIds = events.map((event) => event.id);
-  const { data: existingRows, error: existingError } = await admin
-    .from("events")
-    .select("id, source_event_id, source_condition_id, title, description, category")
-    .eq("source_platform", "polymarket")
-    .in("source_event_id", sourceIds);
+  const SOURCE_ID_BATCH_SIZE = 500;
+  const RPC_CONCURRENCY = 40;
 
-  if (existingError) throw new Error(existingError.message);
+  for (let batchStart = 0; batchStart < events.length; batchStart += SOURCE_ID_BATCH_SIZE) {
+    const batch = events.slice(batchStart, batchStart + SOURCE_ID_BATCH_SIZE);
+    const sourceIds = batch.map((event) => event.id);
 
-  const existingBySourceId = new Map(
-    (existingRows ?? []).map((row) => [row.source_event_id as string, row]),
-  );
+    const { data: existingRows, error: existingError } = await admin
+      .from("events")
+      .select("id, source_event_id, source_condition_id, title, description, category")
+      .eq("source_platform", "polymarket")
+      .in("source_event_id", sourceIds);
 
-  for (const event of events) {
-    const market = selectBestMarket(event.markets ?? []);
-    if (!market) {
-      results.skipped.push(event.id);
-      results.skipReasons.noBinaryMarket.push(event.id);
-      continue;
-    }
+    if (existingError) throw new Error(existingError.message);
 
-    const compatibleMarket = toBinaryCompatibleMarket(market, event.title);
-    if (!compatibleMarket) {
-      results.skipped.push(event.id);
-      results.skipReasons.noBinaryMarket.push(event.id);
-      continue;
-    }
-
-    const prices = getBinaryOutcomePrices(compatibleMarket);
-    if (!prices) {
-      results.skipped.push(event.id);
-      results.skipReasons.noPrices.push(event.id);
-      continue;
-    }
-
-    const existing = existingBySourceId.get(event.id);
-
-    if (existing) {
-      const nextTitle = compatibleMarket.question || event.title;
-      const nextDescription = (event.description || "").slice(0, 2000);
-      const nextCategory = mapCategory(event.category);
-      const nextConditionId = compatibleMarket.conditionId;
-
-      const changed =
-        existing.title !== nextTitle ||
-        existing.description !== nextDescription ||
-        existing.category !== nextCategory ||
-        existing.source_condition_id !== nextConditionId;
-
-      if (!changed) {
-        results.skipped.push(event.id);
-        results.skipReasons.unchangedExisting.push(event.id);
-        continue;
-      }
-
-      const { error } = await admin
-        .from("events")
-        .update({
-          title: nextTitle,
-          description: nextDescription,
-          category: nextCategory,
-          source_condition_id: nextConditionId,
-        })
-        .eq("id", existing.id);
-
-      if (error) results.importErrors.push({ id: event.id, error: error.message });
-      else results.updated.push(event.id);
-      continue;
-    }
-
-    const volume = Number(compatibleMarket.volume) || Number(event.volume) || 0;
-    const volumeBasedLiquidity = Math.round((volume / 10) * 100) / 100;
-    const initialLiquidity = Math.min(
-      Math.max(volumeBasedLiquidity, MIN_INITIAL_LIQUIDITY_USD),
-      MAX_INITIAL_LIQUIDITY_USD,
+    const existingBySourceId = new Map(
+      (existingRows ?? []).map((row) => [row.source_event_id as string, row]),
     );
 
-    try {
-      const { data, error } = await admin.rpc("import_external_event", {
-        p_source_platform: "polymarket",
-        p_source_event_id: event.id,
-        p_source_condition_id: compatibleMarket.conditionId,
-        p_title: compatibleMarket.question || event.title,
-        p_description: (event.description || "").slice(0, 2000),
-        p_category: mapCategory(event.category),
-        p_yes_price: prices.yes,
-        p_no_price: prices.no,
-        p_initial_liquidity_usd: initialLiquidity,
-      });
-
-      if (error) results.importErrors.push({ id: event.id, error: error.message });
-      else if (data) results.imported.push(event.id);
-      else {
+    const processEvent = async (event: (typeof batch)[number]) => {
+      const market = selectBestMarket(event.markets ?? []);
+      if (!market) {
         results.skipped.push(event.id);
-        results.skipReasons.rpcReturnedFalse.push(event.id);
+        results.skipReasons.noBinaryMarket.push(event.id);
+        return;
       }
-    } catch (err) {
-      results.importErrors.push({
-        id: event.id,
-        error: err instanceof Error ? err.message : "Unknown error",
-      });
+
+      const compatibleMarket = toBinaryCompatibleMarket(market, event.title);
+      if (!compatibleMarket) {
+        results.skipped.push(event.id);
+        results.skipReasons.noBinaryMarket.push(event.id);
+        return;
+      }
+
+      const prices = getBinaryOutcomePrices(compatibleMarket);
+      if (!prices) {
+        results.skipped.push(event.id);
+        results.skipReasons.noPrices.push(event.id);
+        return;
+      }
+
+      const existing = existingBySourceId.get(event.id);
+
+      if (existing) {
+        const nextTitle = compatibleMarket.question || event.title;
+        const nextDescription = (event.description || "").slice(0, 2000);
+        const nextCategory = mapCategory(event.category);
+        const nextConditionId = compatibleMarket.conditionId;
+
+        const changed =
+          existing.title !== nextTitle ||
+          existing.description !== nextDescription ||
+          existing.category !== nextCategory ||
+          existing.source_condition_id !== nextConditionId;
+
+        if (!changed) {
+          results.skipped.push(event.id);
+          results.skipReasons.unchangedExisting.push(event.id);
+          return;
+        }
+
+        const { error } = await admin
+          .from("events")
+          .update({
+            title: nextTitle,
+            description: nextDescription,
+            category: nextCategory,
+            source_condition_id: nextConditionId,
+          })
+          .eq("id", existing.id);
+
+        if (error) results.importErrors.push({ id: event.id, error: error.message });
+        else results.updated.push(event.id);
+        return;
+      }
+
+      const volume = Number(compatibleMarket.volume) || Number(event.volume) || 0;
+      const volumeBasedLiquidity = Math.round((volume / 10) * 100) / 100;
+      const initialLiquidity = Math.min(
+        Math.max(volumeBasedLiquidity, MIN_INITIAL_LIQUIDITY_USD),
+        MAX_INITIAL_LIQUIDITY_USD,
+      );
+
+      try {
+        const { data, error } = await admin.rpc("import_external_event", {
+          p_source_platform: "polymarket",
+          p_source_event_id: event.id,
+          p_source_condition_id: compatibleMarket.conditionId,
+          p_title: compatibleMarket.question || event.title,
+          p_description: (event.description || "").slice(0, 2000),
+          p_category: mapCategory(event.category),
+          p_yes_price: prices.yes,
+          p_no_price: prices.no,
+          p_initial_liquidity_usd: initialLiquidity,
+        });
+
+        if (error) results.importErrors.push({ id: event.id, error: error.message });
+        else if (data) results.imported.push(event.id);
+        else {
+          results.skipped.push(event.id);
+          results.skipReasons.rpcReturnedFalse.push(event.id);
+        }
+      } catch (err) {
+        results.importErrors.push({
+          id: event.id,
+          error: err instanceof Error ? err.message : "Unknown error",
+        });
+      }
+    };
+
+    for (let i = 0; i < batch.length; i += RPC_CONCURRENCY) {
+      await Promise.all(batch.slice(i, i + RPC_CONCURRENCY).map(processEvent));
     }
   }
 

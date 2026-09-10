@@ -147,7 +147,7 @@ async function syncActiveEvents(
 
     const { data: existingRows, error: existingError } = await admin
       .from("events")
-      .select("id, source_event_id, source_condition_id, title, description, category, total_yes_pool, total_no_pool")
+      .select("id, source_event_id, source_condition_id, title, description, category, total_yes_pool, total_no_pool, polymarket_source_volume_usd")
       .eq("source_platform", "polymarket")
       .in("source_event_id", sourceIds);
 
@@ -206,6 +206,7 @@ async function syncActiveEvents(
             source_condition_id: nextConditionId,
             total_yes_pool: nextYesPool,
             total_no_pool: nextNoPool,
+            polymarket_source_volume_usd: Math.round(volume * 100) / 100,
           })
           .eq("id", existing.id);
 
@@ -229,8 +230,15 @@ async function syncActiveEvents(
         });
 
         if (error) results.importErrors.push({ id: event.id, error: error.message });
-        else if (data) results.imported.push(event.id);
-        else {
+        else if (data) {
+          const { error: volumeError } = await admin
+            .from("events")
+            .update({ polymarket_source_volume_usd: Math.round(volume * 100) / 100 })
+            .eq("source_platform", "polymarket")
+            .eq("source_event_id", event.id);
+          if (volumeError) results.importErrors.push({ id: event.id, error: volumeError.message });
+          else results.imported.push(event.id);
+        } else {
           results.skipped.push(event.id);
           results.skipReasons.rpcReturnedFalse.push(event.id);
         }

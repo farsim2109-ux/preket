@@ -29,19 +29,58 @@ async function fetchEvents(url: string): Promise<GammaEvent[]> {
   return res.json();
 }
 
+async function fetchEventsKeyset(
+  afterCursor?: string,
+): Promise<{ events: GammaEvent[]; nextCursor: string | null }> {
+  const params = new URLSearchParams({
+    active: "true",
+    closed: "false",
+    limit: "100",
+  });
+  if (afterCursor) params.set("after_cursor", afterCursor);
+
+  const res = await fetch(`${GAMMA_BASE}/events/keyset?${params.toString()}`, {
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`Gamma API error: ${res.status}`);
+
+  const data = await res.json();
+  return {
+    events: Array.isArray(data?.events) ? data.events : [],
+    nextCursor: typeof data?.next_cursor === "string" ? data.next_cursor : null,
+  };
+}
+
 export async function fetchNewTopEvents(): Promise<GammaEvent[]> {
   const pageSize = 100;
   const events: GammaEvent[] = [];
 
-  for (let offset = 0; ; offset += pageSize) {
-    const url = `${GAMMA_BASE}/events?active=true&closed=false&limit=${pageSize}&offset=${offset}`;
-    const page = await fetchEvents(url);
-    events.push(...page);
+  try {
+    for (let offset = 0; ; offset += pageSize) {
+      const url = `${GAMMA_BASE}/events?active=true&closed=false&limit=${pageSize}&offset=${offset}`;
+      const page = await fetchEvents(url);
+      events.push(...page);
 
-    if (page.length < pageSize) break;
+      if (page.length < pageSize) return events;
+    }
+  } catch (err) {
+    if (!(err instanceof Error) || !err.message.includes("Gamma API error: 422")) {
+      throw err;
+    }
   }
 
-  return events;
+  const keysetEvents: GammaEvent[] = [];
+  let afterCursor: string | undefined;
+
+  for (;;) {
+    const page = await fetchEventsKeyset(afterCursor);
+    keysetEvents.push(...page.events);
+
+    if (page.events.length < pageSize || !page.nextCursor) break;
+    afterCursor = page.nextCursor;
+  }
+
+  return keysetEvents;
 }
 
 export function toProxyYesNoMarket(

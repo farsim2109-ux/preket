@@ -13,6 +13,7 @@ const MIN_INITIAL_LIQUIDITY_USD = 50;
 // Resolution is intentionally checked on every scheduler invocation.
 // The primary scheduler runs once per minute.
 const RESOLUTION_CHECK_INTERVAL_MINUTES = 1;
+const POLYMARKET_CURSOR_KEY = "polymarket_cursor";
 export const maxDuration = 60;
 
 function checkCronAuth(request: Request): boolean {
@@ -119,7 +120,7 @@ async function resolveRecentlyClosedPolymarketEvents(
 
 async function syncActiveEvents(
   admin: ReturnType<typeof createAdminClient>,
-  events: Awaited<ReturnType<typeof fetchNewTopEvents>>,
+  events: Awaited<ReturnType<typeof fetchNewTopEvents>>["events"],
 ) {
   const results = {
     imported: [] as string[],
@@ -259,21 +260,64 @@ async function runSync(request: Request) {
   }
 
   const admin = createAdminClient();
-  let events;
+  let cursor: string | null = null;
+
   try {
-    events = await fetchNewTopEvents();
+    const { data: state, error: stateError } = await admin
+      .from("sync_state")
+      .select("value")
+      .eq("key", POLYMARKET_CURSOR_KEY)
+      .maybeSingle();
+
+    if (stateError) throw new Error(stateError.message);
+    cursor = state?.value ?? null;
+  } catch (err) {
+    const error = err instanceof Error ? err.message : "Unknown error";
+    console.error(`[Polymarket Sync] ${startedAt} | CURSOR_READ_FAILED | error=${error}`);
+    return NextResponse.json({ error: "Failed to read Polymarket sync state", details: error, startedAt }, { status: 500 });
+  }
+
+  let page;
+  try {
+    page = await fetchNewTopEvents(cursor);
   } catch (err) {
     const error = err instanceof Error ? err.message : "Unknown error";
     console.error(`[Polymarket Sync] ${startedAt} | FETCH_FAILED | error=${error}`);
     return NextResponse.json({ error: "Failed to fetch Polymarket events", details: error, startedAt }, { status: 502 });
   }
 
+  const events = page.events;
+
   try {
+    if (events.length === 0) {
+      const { error: resetError } = await admin
+        .from("sync_state")
+        .upsert({
+          key: POLYMARKET_CURSOR_KEY,
+          value: null,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (resetError) throw new Error(resetError.message);
+    }
+
     const sync = await syncActiveEvents(admin, events);
     const resolution = await resolveRecentlyClosedPolymarketEvents(admin);
     const resolved = resolution.resolved;
     const needsReview = resolution.needsReview;
     const resolutionErrors = resolution.errors;
+
+    if (events.length > 0) {
+      const { error: cursorError } = await admin
+        .from("sync_state")
+        .upsert({
+          key: POLYMARKET_CURSOR_KEY,
+          value: page.nextCursor,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (cursorError) throw new Error(cursorError.message);
+    }
 
     const completedAt = new Date().toISOString();
     const durationMs = Date.now() - new Date(startedAt).getTime();
@@ -284,6 +328,7 @@ async function runSync(request: Request) {
     console.log(
       `[Polymarket Sync] ${completedAt} | status=OK | fetched=${events.length} | imported=${sync.imported.length} | updated=${sync.updated.length} | skipped=${sync.skipped.length} | import_errors=${sync.importErrors.length} | resolved=${resolved.length} | needs_review=${needsReview.length} | resolution_errors=${resolutionErrors.length} | duration_ms=${durationMs}`,
     );
+    console.log(`[Polymarket Sync] cursor=${page.nextCursor ?? "null"}`);
     console.log(`[Polymarket Sync] skip_reasons=${JSON.stringify(skipSummary)}`);
 
     if (sync.imported.length) console.log(`[Polymarket Sync] imported_ids=${sync.imported.join(",")}`);
@@ -296,6 +341,7 @@ async function runSync(request: Request) {
       ok: true,
       startedAt,
       completedAt,
+      cursor: page.nextCursor,
       imported: sync.imported.length,
       updated: sync.updated.length,
       skipped: sync.skipped.length,

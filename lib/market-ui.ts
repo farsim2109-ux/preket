@@ -6,6 +6,8 @@ import {
   Cpu,
   Sparkles,
   TrendingUp,
+  BriefcaseBusiness,
+  WalletCards,
   type LucideIcon,
 } from "lucide-react";
 
@@ -83,6 +85,24 @@ const CATEGORY_MAP: Record<string, Partial<CategoryMeta>> = {
     accent: "text-pink-400",
     border: "border-pink-500/30",
     bg: "bg-pink-500/10",
+  },
+  business: {
+    label: "Business",
+    icon: BriefcaseBusiness,
+    emoji: "💼",
+    gradient: "from-amber-600/40 via-yellow-500/20 to-transparent",
+    accent: "text-amber-400",
+    border: "border-amber-500/30",
+    bg: "bg-amber-500/10",
+  },
+  finance: {
+    label: "Finance",
+    icon: WalletCards,
+    emoji: "💰",
+    gradient: "from-lime-600/40 via-green-500/20 to-transparent",
+    accent: "text-lime-400",
+    border: "border-lime-500/30",
+    bg: "bg-lime-500/10",
   },
   general: DEFAULT_META,
 };

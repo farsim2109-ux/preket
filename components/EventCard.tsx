@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Event } from "@/lib/types";
-import { formatUsd } from "@/lib/types";
-import { getMarketPricesFromReserves, realVolume } from "@/lib/market-math";
+import { formatUsd, getDisplayVolume } from "@/lib/types";
+import { getMarketPricesFromReserves } from "@/lib/market-math";
 import { getCategoryMeta } from "@/lib/market-ui";
 import { StatusPill } from "@/components/MarketUI";
 import { MarketOdds } from "@/components/MarketOdds";
@@ -19,7 +19,7 @@ export function EventCard({ event }: { event: Event }) {
   const cpmmRy = Number(event.cpmm_ry ?? yesPool + 500);
   const cpmmRn = Number(event.cpmm_rn ?? noPool + 500);
   const { yesProb, noProb } = getMarketPricesFromReserves(cpmmRy, cpmmRn);
-  const totalPool = realVolume(yesPool, noPool);
+  const displayVolume = getDisplayVolume(event.polymarket_source_volume_usd, event.source_event_id ?? event.id);
 
   return (
     <Link
@@ -28,7 +28,6 @@ export function EventCard({ event }: { event: Event }) {
         isActive ? meta.border : "border-zinc-700/60 opacity-80 hover:opacity-100"
       }`}
     >
-      {/* Category banner */}
       <div
         className={`relative h-20 border-b ${
           isActive
@@ -62,7 +61,6 @@ export function EventCard({ event }: { event: Event }) {
         </h3>
         <p className="text-sm text-zinc-500 line-clamp-2 mb-4">{event.description}</p>
 
-        {/* Active: show live odds */}
         {isActive && (
           <>
             <div className="flex h-2.5 overflow-hidden rounded-full mb-3 ring-1 ring-white/5">
@@ -75,7 +73,6 @@ export function EventCard({ event }: { event: Event }) {
           </>
         )}
 
-        {/* Resolved: show winner */}
         {isResolved && (
           <div
             className={`rounded-xl border p-4 mb-4 flex items-center gap-3 ${
@@ -98,7 +95,6 @@ export function EventCard({ event }: { event: Event }) {
           </div>
         )}
 
-        {/* Cancelled: show notice */}
         {isCancelled && (
           <div className="rounded-xl border border-zinc-600/50 bg-zinc-800/50 p-4 mb-4 flex items-center gap-3">
             <Ban className="h-5 w-5 text-zinc-500 shrink-0" />
@@ -112,7 +108,7 @@ export function EventCard({ event }: { event: Event }) {
         <div className="flex items-center justify-between text-xs text-zinc-500">
           <span className="inline-flex items-center gap-1">
             <Users className="h-3.5 w-3.5" />
-            Vol. {formatUsd(totalPool)}
+            Vol. {formatUsd(displayVolume)}
           </span>
           <span className="inline-flex items-center gap-1 font-medium text-blue-400 group-hover:gap-2 transition-all">
             {isActive ? "Trade" : "View"} <ArrowRight className="h-3.5 w-3.5" />

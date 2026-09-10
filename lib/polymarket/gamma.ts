@@ -34,7 +34,7 @@ export async function fetchNewTopEvents(): Promise<GammaEvent[]> {
   const events: GammaEvent[] = [];
 
   for (let offset = 0; ; offset += pageSize) {
-    const url = `${GAMMA_BASE}/events?active=true&closed=false&order=volume&ascending=false&limit=${pageSize}&offset=${offset}`;
+    const url = `${GAMMA_BASE}/events?active=true&closed=false&limit=${pageSize}&offset=${offset}`;
     const page = await fetchEvents(url);
     events.push(...page);
 

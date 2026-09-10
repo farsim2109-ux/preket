@@ -131,14 +131,15 @@ export async function fetchEventById(id: string): Promise<GammaEvent | null> {
 
 /**
  * Normalize Gamma's category into Preket's UI taxonomy.
- * When Gamma returns an empty/generic category, use the event text as a
- * deterministic fallback so older/existing imports don't all collapse into
- * General. The fallback is intentionally conservative.
+ * Metadata is preferred, but generic/missing Gamma categories are resolved
+ * from the market text using ordered topic rules. This keeps the fallback
+ * deterministic and prevents broad topics from collapsing into General.
  */
 export function mapCategory(gammaCategory: string, title = "", description = ""): string {
   const category = (gammaCategory || "").toLowerCase().trim();
   const text = `${title} ${description}`.toLowerCase();
 
+  // Trust explicit Gamma taxonomy first.
   if (category.includes("sport")) return "sports";
   if (category.includes("crypto") || category.includes("blockchain")) return "crypto";
   if (category.includes("politic") || category.includes("election") || category.includes("government")) return "politics";
@@ -148,12 +149,15 @@ export function mapCategory(gammaCategory: string, title = "", description = "")
   if (category.includes("finance") || category.includes("financial") || category.includes("market")) return "finance";
   if (category.includes("world") || category.includes("international") || category.includes("global")) return "world";
 
-  if (/\b(nfl|nba|nhl|mlb|ncaa|ufc|mma|fifa|soccer|football|basketball|baseball|tennis|golf|boxing|cricket|formula 1|f1|racing|match|game|tournament|league)\b/.test(text)) return "sports";
-  if (/\b(bitcoin|btc|ethereum|eth|solana|sol|crypto|cryptocurrency|token|memecoin|dogecoin|xrp)\b/.test(text)) return "crypto";
-  if (/\b(trump|president|presidential|election|senate|congress|governor|mayor|democrat|republican|vote|voting|government|prime minister|parliament)\b/.test(text)) return "politics";
-  if (/\b(ai|artificial intelligence|openai|google|apple|microsoft|nvidia|robot|technology|tech|software|chip|semiconductor|spacex)\b/.test(text)) return "tech";
-  if (/\b(movie|film|music|song|album|actor|actress|celebrity|grammy|oscar|emmy|tv|television|entertainment)\b/.test(text)) return "entertainment";
-  if (/\b(stock|stocks|nasdaq|s&p|dow|fed|interest rate|inflation|gdp|recession|economy|economic|business|company|earnings)\b/.test(text)) return "finance";
+  // Text fallback. More specific domains come before broad political/world terms.
+  if (/\b(nfl|nba|nhl|mlb|ncaa|ufc|mma|fifa|soccer|football|basketball|baseball|tennis|golf|boxing|cricket|formula\s*1|f1|racing|match|tournament|league|championship|playoffs?|world series|super bowl|grand prix)\b/.test(text)) return "sports";
+  if (/\b(bitcoin|btc|ethereum|eth|solana|sol|crypto|cryptocurrency|blockchain|token|memecoin|dogecoin|xrp|bnb|defi|nft)\b/.test(text)) return "crypto";
+  if (/\b(ai|artificial intelligence|openai|chatgpt|google|apple|microsoft|nvidia|meta|robot|robotics|technology|tech|software|chip|semiconductor|spacex|tesla|quantum computing)\b/.test(text)) return "tech";
+  if (/\b(movie|film|music|song|album|actor|actress|celebrity|grammy|oscar|emmy|tv|television|netflix|youtube|streaming|entertainment|box office)\b/.test(text)) return "entertainment";
+  if (/\b(stock|stocks|nasdaq|s&p|dow jones|fed|federal reserve|interest rate|interest rates|inflation|cpi|gdp|recession|economy|economic|treasury|bond yield|unemployment|jobs report|earnings|revenue|ipo|company)\b/.test(text)) return "finance";
+  if (/\b(business|corporate|merger|acquisition|startup|ceo|company launches|retail sales|sales forecast|industry)\b/.test(text)) return "business";
+  if (/\b(president|presidential|election|senate|congress|governor|mayor|democrat|republican|vote|voting|government|prime minister|parliament|cabinet|supreme court|political party|legislation|bill passes|referendum)\b/.test(text)) return "politics";
+  if (/\b(ukraine|russia|israel|iran|china|taiwan|north korea|south korea|gaza|palestine|nato|united nations|un\b|war|warfare|ceasefire|invasion|military conflict|geopolitic|international|global|country)\b/.test(text)) return "world";
 
   return "general";
 }

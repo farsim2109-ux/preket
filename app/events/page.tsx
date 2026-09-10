@@ -1,42 +1,90 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { EventCard } from "@/components/EventCard";
-import { getCategoryMeta } from "@/lib/market-ui";
-import type { EventStatus } from "@/lib/types";
 import { Flame, TrendingUp, CheckCircle2, LayoutGrid, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { MarketingTrustStrip } from "@/components/MarketingTrust";
+import type { EventStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 60;
-const MARKET_CATEGORIES = ["sports", "politics", "crypto", "tech", "entertainment", "finance", "business", "world", "general"];
 
 type StatusFilter = EventStatus | "all";
 
-function buildUrl(status: StatusFilter, category?: string, search?: string, page?: number) {
+type Topic = { label: string; terms: string[] };
+
+// These are user-facing market topics, intentionally separate from the
+// existing broad DB categories (sports/politics/etc.). A market can match
+// multiple topics without changing its stored category.
+const TOPICS: Topic[] = [
+  { label: "All", terms: [] },
+  { label: "Trump", terms: ["trump"] },
+  { label: "Laptop", terms: ["laptop"] },
+  { label: "NFL Gameday", terms: ["nfl"] },
+  { label: "UCL Matchday", terms: ["ucl", "champions league"] },
+  { label: "AI Achievements", terms: ["ai", "artificial intelligence", "chatgpt", "gpt", "claude", "gemini"] },
+  { label: "Sweden Elections", terms: ["sweden", "swedish"] },
+  { label: "Astra", terms: ["astra"] },
+  { label: "GTA VI", terms: ["gta vi", "gta 6", "grand theft auto vi"] },
+  { label: "Fed", terms: ["federal reserve", "fed ", "fed's", "interest rate"] },
+  { label: "Iran", terms: ["iran", "iranian"] },
+  { label: "September 8 and 9 Primaries", terms: ["september 8", "september 9", "sep 8", "sep 9", "primary", "primaries"] },
+  { label: "US Open", terms: ["us open"] },
+  { label: "US Canada Trade War", terms: ["us-canada", "us canada", "canada trade", "trade war"] },
+  { label: "Russia", terms: ["russia", "russian"] },
+  { label: "Emmys", terms: ["emmy", "emmys"] },
+  { label: "Lower Saxony", terms: ["lower saxony", "niedersachsen"] },
+  { label: "Anthropic IPO", terms: ["anthropic", "anthropic ipo"] },
+  { label: "Gaza", terms: ["gaza"] },
+  { label: "Berlin", terms: ["berlin"] },
+  { label: "Mecklenburg-Vorpommern", terms: ["mecklenburg-vorpommern"] },
+  { label: "Saxony-Anhalt", terms: ["saxony-anhalt"] },
+  { label: "Israel Election", terms: ["israel election", "israeli election"] },
+  { label: "Oil", terms: ["oil", "crude oil", "brent", "wti"] },
+  { label: "AI", terms: ["ai", "artificial intelligence"] },
+  { label: "Earnings", terms: ["earnings", "revenue", "profit", "quarterly results"] },
+  { label: "Tweet Markets", terms: ["tweet", "tweets", "x post", "twitter"] },
+  { label: "Daily Temperature", terms: ["temperature", "degrees", "daily temperature"] },
+  { label: "Cuba", terms: ["cuba", "cuban"] },
+  { label: "Peace Deal", terms: ["peace deal", "peace agreement", "ceasefire"] },
+  { label: "Privates", terms: ["private company", "private market", "private valuation", "privates"] },
+  { label: "Strait of Hormuz", terms: ["strait of hormuz", "hormuz"] },
+  { label: "Global Elections", terms: ["global election", "world election", "elections"] },
+  { label: "Midterms", terms: ["midterm", "midterms"] },
+  { label: "Movies", terms: ["movie", "movies", "film", "box office"] },
+  { label: "Crypto Prices", terms: ["bitcoin", "btc", "ethereum", "eth", "solana", "crypto", "price"] },
+  { label: "Commodities", terms: ["commodity", "commodities", "gold", "silver", "copper"] },
+];
+
+function buildUrl(status: StatusFilter, topic?: string, search?: string, page?: number) {
   const params = new URLSearchParams();
   if (status !== "active") params.set("status", status);
-  if (category) params.set("category", category);
+  if (topic) params.set("topic", topic);
   if (search?.trim()) params.set("q", search.trim());
   if (page && page > 1) params.set("page", String(page));
-  const q = params.toString();
-  return `/events${q ? `?${q}` : ""}`;
+  const query = params.toString();
+  return `/events${query ? `?${query}` : ""}`;
+}
+
+function topicWhere(terms: string[]) {
+  return terms
+    .map((term) => `title.ilike.%${term}%,description.ilike.%${term}%`)
+    .join(",");
 }
 
 export default async function EventsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; status?: string; q?: string; page?: string }>;
+  searchParams: Promise<{ topic?: string; status?: string; q?: string; page?: string }>;
 }) {
   const params = await searchParams;
   const supabase = await createClient();
 
   const statusFilter: StatusFilter =
-    params.status === "resolved" || params.status === "all"
-      ? params.status
-      : "active";
+    params.status === "resolved" || params.status === "all" ? params.status : "active";
 
-  const categoryFilter = params.category?.toLowerCase().trim();
+  const topicKey = params.topic?.trim();
+  const selectedTopic = topicKey ? TOPICS.find((topic) => topic.label === topicKey) : undefined;
   const searchQuery = (params.q ?? "").trim().slice(0, 100);
   const safeSearch = searchQuery.replace(/[%,_]/g, " ").replace(/\s+/g, " ").trim();
   const requestedPage = Number.parseInt(params.page ?? "1", 10);
@@ -51,38 +99,18 @@ export default async function EventsPage({
     .range(from, to);
 
   if (statusFilter !== "all") eventsQuery = eventsQuery.eq("status", statusFilter);
-  if (categoryFilter) eventsQuery = eventsQuery.ilike("category", categoryFilter);
+  if (selectedTopic?.terms.length) eventsQuery = eventsQuery.or(topicWhere(selectedTopic.terms));
   if (safeSearch) {
     eventsQuery = eventsQuery.or(
       `title.ilike.%${safeSearch}%,description.ilike.%${safeSearch}%,category.ilike.%${safeSearch}%`,
     );
   }
 
-  // Never fetch thousands of category rows just to calculate badges. Exact
-  // counts are cheap and, unlike a normal select, are not capped at 1,000 rows.
-  const activeCountQuery = supabase
+  const { data: events, count: eventsCount } = await eventsQuery;
+  const { count: activeCount } = await supabase
     .from("events")
     .select("id", { count: "exact", head: true })
     .eq("status", "active");
-
-  const categoryCountQueries = MARKET_CATEGORIES.map((category) =>
-    supabase
-      .from("events")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "active")
-      .ilike("category", category),
-  );
-
-  const [{ data: events, count: eventsCount }, { count: activeCount }, ...categoryResults] = await Promise.all([
-    eventsQuery,
-    activeCountQuery,
-    ...categoryCountQueries,
-  ]);
-
-  const categories = MARKET_CATEGORIES.filter((category, index) => (categoryResults[index]?.count ?? 0) > 0);
-  const categoryCounts = new Map(
-    MARKET_CATEGORIES.map((category, index) => [category, categoryResults[index]?.count ?? 0]),
-  );
 
   const totalPages = Math.max(1, Math.ceil((eventsCount ?? 0) / PAGE_SIZE));
   const hasPrevious = currentPage > 1;
@@ -91,181 +119,128 @@ export default async function EventsPage({
   const statusTabs = [
     { id: "active" as const, label: "Active", icon: <Flame className="h-4 w-4" /> },
     { id: "resolved" as const, label: "Resolved", icon: <CheckCircle2 className="h-4 w-4" /> },
-    { id: "all" as const, label: "All", icon: <LayoutGrid className="h-4 w-4" /> },
+    { id: "all" as const, label: "All markets", icon: <LayoutGrid className="h-4 w-4" /> },
   ];
 
-  const emptyMessages: Record<StatusFilter, { title: string; sub: string }> = {
-    active: { title: "No active markets", sub: "New markets will appear here when an admin creates them." },
-    resolved: { title: "No resolved markets", sub: "Completed markets will show here after admin resolution." },
-    cancelled: { title: "No cancelled markets", sub: "Cancelled markets are archived here for reference." },
-    all: { title: "No markets yet", sub: "Create one from the Admin dashboard." },
-  };
-
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[var(--background)]">
       <div className="border-b border-[var(--card-border)] bg-gradient-to-b from-indigo-950/40 to-transparent">
-        <div className="mx-auto max-w-6xl px-4 py-10">
+        <div className="mx-auto max-w-7xl px-4 py-8 md:py-10">
           <div className="flex items-center gap-2 mb-2">
             <Flame className="h-5 w-5 text-orange-400" />
             <span className="text-sm font-medium text-orange-400">Live Prediction Markets</span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-black text-white mb-2">Markets</h1>
-          <p className="text-zinc-400 max-w-xl">
-            Trade on real-world outcomes. Buy Yes or No — prices move with the crowd.
-          </p>
-          <div className="mt-4 flex gap-4 text-sm">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-emerald-400">
-              <TrendingUp className="h-4 w-4" />
-              {activeCount ?? 0} active
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-black text-white mb-2">Markets</h1>
+              <p className="text-zinc-400 max-w-xl">Trade on real-world outcomes. Buy Yes or No — prices move with the crowd.</p>
+            </div>
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-sm text-emerald-400">
+              <TrendingUp className="h-4 w-4" /> {activeCount ?? 0} active
             </span>
           </div>
           <MarketingTrustStrip className="mt-6" />
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 py-8">
-        <div className="flex flex-wrap gap-2 mb-5">
-          {statusTabs.map((tab) => (
-            <Link
-              key={tab.id}
-              href={buildUrl(tab.id, params.category, searchQuery)}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-all ${
-                statusFilter === tab.id
-                  ? "bg-white text-black border-white shadow-lg shadow-white/10"
-                  : "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white bg-zinc-900/50"
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-            </Link>
-          ))}
+      <div className="sticky top-16 z-40 border-b border-[var(--card-border)] bg-[var(--background)]/95 backdrop-blur">
+        <div className="mx-auto max-w-7xl px-4 py-3">
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {TOPICS.map((topic) => (
+              <Link
+                key={topic.label}
+                href={buildUrl(statusFilter, topic.label === "All" ? undefined : topic.label, safeSearch)}
+                className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-2 text-sm font-medium transition-colors ${
+                  (topic.label === "All" && !selectedTopic) || selectedTopic?.label === topic.label
+                    ? "border-white bg-white text-black"
+                    : "border-zinc-700 bg-zinc-900/70 text-zinc-400 hover:border-zinc-500 hover:text-white"
+                }`}
+              >
+                {topic.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 py-6 md:py-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex gap-2">
+            {statusTabs.map((tab) => (
+              <Link
+                key={tab.id}
+                href={buildUrl(tab.id, selectedTopic?.label, searchQuery)}
+                className={`inline-flex items-center gap-2 rounded-lg border px-3.5 py-2 text-sm font-medium transition-colors ${
+                  statusFilter === tab.id
+                    ? "border-white bg-white text-black"
+                    : "border-zinc-700 bg-zinc-900/60 text-zinc-400 hover:border-zinc-500 hover:text-white"
+                }`}
+              >
+                {tab.icon}{tab.label}
+              </Link>
+            ))}
+          </div>
+
+          <form action="/events" method="get" className="w-full md:max-w-sm">
+            {selectedTopic && <input type="hidden" name="topic" value={selectedTopic.label} />}
+            {statusFilter !== "active" && <input type="hidden" name="status" value={statusFilter} />}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+              <input
+                name="q"
+                defaultValue={searchQuery}
+                placeholder="Search markets..."
+                aria-label="Search markets"
+                className="w-full rounded-xl border border-zinc-700 bg-zinc-900/70 py-2.5 pl-11 pr-11 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              />
+              {searchQuery && (
+                <Link href={buildUrl(statusFilter, selectedTopic?.label, "")} aria-label="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-zinc-500 hover:text-white">
+                  <X className="h-4 w-4" />
+                </Link>
+              )}
+            </div>
+          </form>
         </div>
 
-        <form action="/events" method="get" className="mb-6">
-          {categoryFilter && <input type="hidden" name="category" value={categoryFilter} />}
-          {statusFilter !== "active" && <input type="hidden" name="status" value={statusFilter} />}
-          <div className="relative max-w-xl">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
-            <input
-              name="q"
-              defaultValue={searchQuery}
-              placeholder="Search any market..."
-              aria-label="Search markets"
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-900/70 py-3 pl-11 pr-11 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            />
-            {searchQuery && (
-              <Link
-                href={buildUrl(statusFilter, categoryFilter, "")}
-                aria-label="Clear search"
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-zinc-500 hover:text-white"
-              >
-                <X className="h-4 w-4" />
-              </Link>
-            )}
-          </div>
-        </form>
-
-        {categories.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-8">
-            <CategoryPill
-              href={buildUrl(statusFilter, undefined, searchQuery)}
-              label="All categories"
-              count={activeCount ?? 0}
-              active={!params.category}
-            />
-            {categories.map((cat) => {
-              const meta = getCategoryMeta(cat);
-              return (
-                <CategoryPill
-                  key={cat}
-                  href={buildUrl(statusFilter, cat, searchQuery)}
-                  label={`${meta.emoji} ${meta.label}`}
-                  count={categoryCounts.get(cat) ?? 0}
-                  active={categoryFilter === cat}
-                />
-              );
-            })}
+        {selectedTopic && (
+          <div className="mt-5 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-white">{selectedTopic.label}</h2>
+              <p className="text-sm text-zinc-500">Markets matching this topic</p>
+            </div>
           </div>
         )}
 
         {!events?.length ? (
-          <div className="text-center py-20 rounded-2xl border border-dashed border-zinc-700">
-            <p className="text-4xl mb-3">📭</p>
-            <p className="text-zinc-400 font-medium">{emptyMessages[statusFilter].title}</p>
-            <p className="text-sm text-zinc-600 mt-1">{safeSearch ? `No markets matched “${safeSearch}”.` : emptyMessages[statusFilter].sub}</p>
+          <div className="mt-6 rounded-2xl border border-dashed border-zinc-700 py-20 text-center">
+            <p className="mb-3 text-4xl">📭</p>
+            <p className="font-medium text-zinc-400">No markets found</p>
+            <p className="mt-1 text-sm text-zinc-600">Try another topic or search term.</p>
           </div>
         ) : (
           <>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {events.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
+            <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {events.map((event) => <EventCard key={event.id} event={event} />)}
             </div>
 
             {totalPages > 1 && (
               <div className="mt-10 flex items-center justify-between gap-4">
                 {hasPrevious ? (
-                  <Link
-                    href={buildUrl(statusFilter, categoryFilter, searchQuery, currentPage - 1)}
-                    className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900/50 px-4 py-2 text-sm font-medium text-zinc-300 hover:border-zinc-500 hover:text-white"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Previous
+                  <Link href={buildUrl(statusFilter, selectedTopic?.label, searchQuery, currentPage - 1)} className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900/50 px-4 py-2 text-sm font-medium text-zinc-300 hover:border-zinc-500 hover:text-white">
+                    <ChevronLeft className="h-4 w-4" /> Previous
                   </Link>
-                ) : (
-                  <span />
-                )}
-                <span className="text-sm text-zinc-500">
-                  Page {currentPage} of {totalPages} · {eventsCount ?? 0} markets
-                </span>
+                ) : <span />}
+                <span className="text-sm text-zinc-500">Page {currentPage} of {totalPages} · {eventsCount ?? 0} markets</span>
                 {hasNext ? (
-                  <Link
-                    href={buildUrl(statusFilter, categoryFilter, searchQuery, currentPage + 1)}
-                    className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900/50 px-4 py-2 text-sm font-medium text-zinc-300 hover:border-zinc-500 hover:text-white"
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4" />
+                  <Link href={buildUrl(statusFilter, selectedTopic?.label, searchQuery, currentPage + 1)} className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900/50 px-4 py-2 text-sm font-medium text-zinc-300 hover:border-zinc-500 hover:text-white">
+                    Next <ChevronRight className="h-4 w-4" />
                   </Link>
-                ) : (
-                  <span />
-                )}
+                ) : <span />}
               </div>
             )}
           </>
         )}
       </div>
     </div>
-  );
-}
-
-function CategoryPill({
-  href,
-  label,
-  count,
-  active,
-}: {
-  href: string;
-  label: string;
-  count: number;
-  active: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-all ${
-        active
-          ? "bg-indigo-600 text-white border-indigo-500"
-          : "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white bg-zinc-900/50"
-      }`}
-    >
-      <span>{label}</span>
-      <span
-        className={`min-w-5 rounded-full px-1.5 py-0.5 text-center text-[11px] leading-none ${
-          active ? "bg-white/15 text-white" : "bg-zinc-800 text-zinc-400"
-        }`}
-      >
-        {count}
-      </span>
-    </Link>
   );
 }

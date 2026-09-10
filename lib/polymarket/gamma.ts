@@ -40,7 +40,7 @@ export async function fetchNewTopEvents(
   const params = new URLSearchParams({
     active: "true",
     closed: "false",
-    limit: "100",
+    limit: "50",
   });
   if (afterCursor) params.set("after_cursor", afterCursor);
 
@@ -129,14 +129,32 @@ export async function fetchEventById(id: string): Promise<GammaEvent | null> {
   return Array.isArray(data) && data.length > 0 ? data[0] : null;
 }
 
-export function mapCategory(gammaCategory: string): string {
-  const c = (gammaCategory || "").toLowerCase();
-  if (c.includes("sport")) return "sports";
-  if (c.includes("crypto")) return "crypto";
-  if (c.includes("politic") || c.includes("election")) return "politics";
-  if (c.includes("tech") || c.includes("science")) return "tech";
-  if (c.includes("pop") || c.includes("entertain") || c.includes("culture")) return "entertainment";
-  if (c.includes("business") || c.includes("economy")) return "business";
+/**
+ * Normalize Gamma's category into Preket's UI taxonomy.
+ * When Gamma returns an empty/generic category, use the event text as a
+ * deterministic fallback so older/existing imports don't all collapse into
+ * General. The fallback is intentionally conservative.
+ */
+export function mapCategory(gammaCategory: string, title = "", description = ""): string {
+  const category = (gammaCategory || "").toLowerCase().trim();
+  const text = `${title} ${description}`.toLowerCase();
+
+  if (category.includes("sport")) return "sports";
+  if (category.includes("crypto") || category.includes("blockchain")) return "crypto";
+  if (category.includes("politic") || category.includes("election") || category.includes("government")) return "politics";
+  if (category.includes("tech") || category.includes("science") || category.includes("ai") || category.includes("technology")) return "tech";
+  if (category.includes("pop") || category.includes("entertain") || category.includes("culture")) return "entertainment";
+  if (category.includes("business") || category.includes("economy") || category.includes("economic")) return "business";
+  if (category.includes("finance") || category.includes("financial") || category.includes("market")) return "finance";
+  if (category.includes("world") || category.includes("international") || category.includes("global")) return "world";
+
+  if (/\b(nfl|nba|nhl|mlb|ncaa|ufc|mma|fifa|soccer|football|basketball|baseball|tennis|golf|boxing|cricket|formula 1|f1|racing|match|game|tournament|league)\b/.test(text)) return "sports";
+  if (/\b(bitcoin|btc|ethereum|eth|solana|sol|crypto|cryptocurrency|token|memecoin|dogecoin|xrp)\b/.test(text)) return "crypto";
+  if (/\b(trump|president|presidential|election|senate|congress|governor|mayor|democrat|republican|vote|voting|government|prime minister|parliament)\b/.test(text)) return "politics";
+  if (/\b(ai|artificial intelligence|openai|google|apple|microsoft|nvidia|robot|technology|tech|software|chip|semiconductor|spacex)\b/.test(text)) return "tech";
+  if (/\b(movie|film|music|song|album|actor|actress|celebrity|grammy|oscar|emmy|tv|television|entertainment)\b/.test(text)) return "entertainment";
+  if (/\b(stock|stocks|nasdaq|s&p|dow|fed|interest rate|inflation|gdp|recession|economy|economic|business|company|earnings)\b/.test(text)) return "finance";
+
   return "general";
 }
 

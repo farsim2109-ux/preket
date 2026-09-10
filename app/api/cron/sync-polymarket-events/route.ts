@@ -5,9 +5,9 @@ import {
   fetchRecentlyClosedEvents,
   getBinaryOutcomePrices,
   mapCategory,
+  toBinaryCompatibleMarket,
 } from "@/lib/polymarket/gamma";
 
-const TOP_N = 100;
 const MAX_INITIAL_LIQUIDITY_USD = 500;
 const MIN_INITIAL_LIQUIDITY_USD = 50;
 // Resolution is intentionally checked on every scheduler invocation.
@@ -29,11 +29,11 @@ function checkCronAuth(request: Request): boolean {
 
 type GammaMarketLike = Parameters<typeof getBinaryOutcomePrices>[0];
 
-function selectBinaryMarket(markets: GammaMarketLike[]) {
-  const binary = markets.filter((market) => getBinaryOutcomePrices(market));
+function selectBestMarket(markets: GammaMarketLike[]) {
   return (
-    binary.sort((a, b) => (Number(b.volume) || 0) - (Number(a.volume) || 0))[0] ??
-    null
+    [...markets].sort(
+      (a, b) => (Number(b.volume) || 0) - (Number(a.volume) || 0),
+    )[0] ?? null
   );
 }
 
@@ -60,7 +60,7 @@ async function resolveRecentlyClosedPolymarketEvents(
   const needsReview: string[] = [];
   const errors: { id: string; error: string }[] = [];
 
-  const closedEvents = await fetchRecentlyClosedEvents(TOP_N);
+  const closedEvents = await fetchRecentlyClosedEvents(100);
 
   for (const gammaEvent of closedEvents) {
     const sourceId = gammaEvent.id;
@@ -72,14 +72,23 @@ async function resolveRecentlyClosedPolymarketEvents(
         ? gammaEvent.markets?.find(
             (item) => item.conditionId === sourceConditionId,
           )
-        : selectBinaryMarket(gammaEvent.markets ?? []);
+        : selectBestMarket(gammaEvent.markets ?? []);
 
       if (!market) {
         errors.push({ id: sourceId, error: "Matching market not found on Polymarket" });
         continue;
       }
 
-      const prices = getBinaryOutcomePrices(market);
+      const compatibleMarket = toBinaryCompatibleMarket(
+        market,
+        gammaEvent.title,
+      );
+      if (!compatibleMarket) {
+        needsReview.push(sourceId);
+        continue;
+      }
+
+      const prices = getBinaryOutcomePrices(compatibleMarket);
       if (!prices) {
         needsReview.push(sourceId);
         continue;
@@ -139,14 +148,21 @@ async function syncActiveEvents(
   );
 
   for (const event of events) {
-    const market = selectBinaryMarket(event.markets ?? []);
+    const market = selectBestMarket(event.markets ?? []);
     if (!market) {
       results.skipped.push(event.id);
       results.skipReasons.noBinaryMarket.push(event.id);
       continue;
     }
 
-    const prices = getBinaryOutcomePrices(market);
+    const compatibleMarket = toBinaryCompatibleMarket(market, event.title);
+    if (!compatibleMarket) {
+      results.skipped.push(event.id);
+      results.skipReasons.noBinaryMarket.push(event.id);
+      continue;
+    }
+
+    const prices = getBinaryOutcomePrices(compatibleMarket);
     if (!prices) {
       results.skipped.push(event.id);
       results.skipReasons.noPrices.push(event.id);
@@ -156,10 +172,10 @@ async function syncActiveEvents(
     const existing = existingBySourceId.get(event.id);
 
     if (existing) {
-      const nextTitle = market.question || event.title;
+      const nextTitle = compatibleMarket.question || event.title;
       const nextDescription = (event.description || "").slice(0, 2000);
       const nextCategory = mapCategory(event.category);
-      const nextConditionId = market.conditionId;
+      const nextConditionId = compatibleMarket.conditionId;
 
       const changed =
         existing.title !== nextTitle ||
@@ -188,7 +204,7 @@ async function syncActiveEvents(
       continue;
     }
 
-    const volume = Number(market.volume) || Number(event.volume) || 0;
+    const volume = Number(compatibleMarket.volume) || Number(event.volume) || 0;
     const volumeBasedLiquidity = Math.round((volume / 10) * 100) / 100;
     const initialLiquidity = Math.min(
       Math.max(volumeBasedLiquidity, MIN_INITIAL_LIQUIDITY_USD),
@@ -199,8 +215,8 @@ async function syncActiveEvents(
       const { data, error } = await admin.rpc("import_external_event", {
         p_source_platform: "polymarket",
         p_source_event_id: event.id,
-        p_source_condition_id: market.conditionId,
-        p_title: market.question || event.title,
+        p_source_condition_id: compatibleMarket.conditionId,
+        p_title: compatibleMarket.question || event.title,
         p_description: (event.description || "").slice(0, 2000),
         p_category: mapCategory(event.category),
         p_yes_price: prices.yes,
@@ -234,7 +250,7 @@ async function runSync(request: Request) {
   const admin = createAdminClient();
   let events;
   try {
-    events = await fetchNewTopEvents(TOP_N);
+    events = await fetchNewTopEvents();
   } catch (err) {
     const error = err instanceof Error ? err.message : "Unknown error";
     console.error(`[Polymarket Sync] ${startedAt} | FETCH_FAILED | error=${error}`);
@@ -269,7 +285,6 @@ async function runSync(request: Request) {
       ok: true,
       startedAt,
       completedAt,
-      topN: TOP_N,
       imported: sync.imported.length,
       updated: sync.updated.length,
       skipped: sync.skipped.length,

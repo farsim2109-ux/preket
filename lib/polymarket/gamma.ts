@@ -29,9 +29,60 @@ async function fetchEvents(url: string): Promise<GammaEvent[]> {
   return res.json();
 }
 
-export async function fetchNewTopEvents(limit: number): Promise<GammaEvent[]> {
-  const url = `${GAMMA_BASE}/events?active=true&closed=false&order=volume&ascending=false&limit=${limit}`;
-  return fetchEvents(url);
+export async function fetchNewTopEvents(): Promise<GammaEvent[]> {
+  const pageSize = 100;
+  const events: GammaEvent[] = [];
+
+  for (let offset = 0; ; offset += pageSize) {
+    const url = `${GAMMA_BASE}/events?active=true&closed=false&order=volume&ascending=false&limit=${pageSize}&offset=${offset}`;
+    const page = await fetchEvents(url);
+    events.push(...page);
+
+    if (page.length < pageSize) break;
+  }
+
+  return events;
+}
+
+export function toProxyYesNoMarket(
+  market: GammaMarket,
+  originalEventTitle: string,
+): GammaMarket | null {
+  let outcomes: string[] = [];
+  let prices: number[] = [];
+
+  try {
+    outcomes = JSON.parse(market.outcomes);
+    prices = JSON.parse(market.outcomePrices).map(Number);
+  } catch {
+    return null;
+  }
+
+  const pricedOutcomes = outcomes
+    .map((outcome, index) => ({ outcome, price: prices[index] }))
+    .filter((item) => item.outcome && Number.isFinite(item.price));
+
+  if (pricedOutcomes.length < 2) return null;
+
+  pricedOutcomes.sort((a, b) => b.price - a.price);
+
+  const yesOutcome = pricedOutcomes[0];
+  const noOutcome = pricedOutcomes[1];
+
+  return {
+    ...market,
+    question: `Will ${yesOutcome.outcome} win? (from: ${originalEventTitle})`,
+    outcomes: JSON.stringify(["Yes", "No"]),
+    outcomePrices: JSON.stringify([yesOutcome.price, noOutcome.price]),
+  };
+}
+
+export function toBinaryCompatibleMarket(
+  market: GammaMarket,
+  originalEventTitle: string,
+): GammaMarket | null {
+  if (getBinaryOutcomePrices(market)) return market;
+  return toProxyYesNoMarket(market, originalEventTitle);
 }
 
 /**

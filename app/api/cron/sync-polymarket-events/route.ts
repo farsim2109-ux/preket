@@ -64,7 +64,7 @@ async function resolveRecentlyClosedPolymarketEvents(
   const needsReview: string[] = [];
   const errors: { id: string; error: string }[] = [];
 
-  const closedEvents = await fetchRecentlyClosedEvents(100);
+  const closedEvents = await fetchRecentlyClosedEvents(50);
 
   for (const gammaEvent of closedEvents) {
     const sourceId = gammaEvent.id;
@@ -138,8 +138,10 @@ async function syncActiveEvents(
     },
   };
 
-  const SOURCE_ID_BATCH_SIZE = 500;
-  const RPC_CONCURRENCY = 40;
+  // fetchNewTopEvents is intentionally capped at 50 events per minute.
+  // Keep processing bounded as well so one cron invocation cannot fan out.
+  const SOURCE_ID_BATCH_SIZE = 50;
+  const RPC_CONCURRENCY = 20;
 
   for (let batchStart = 0; batchStart < events.length; batchStart += SOURCE_ID_BATCH_SIZE) {
     const batch = events.slice(batchStart, batchStart + SOURCE_ID_BATCH_SIZE);
@@ -186,7 +188,7 @@ async function syncActiveEvents(
       if (existing) {
         const nextTitle = compatibleMarket.question || event.title;
         const nextDescription = (event.description || "").slice(0, 2000);
-        const nextCategory = mapCategory(event.category);
+        const nextCategory = mapCategory(event.category, event.title, event.description);
         const nextConditionId = compatibleMarket.conditionId;
         const nextYesPool = Math.round((liquidityUsd / 2) * 100) / 100;
         const nextNoPool = Math.round((liquidityUsd - nextYesPool) * 100) / 100;
@@ -223,7 +225,7 @@ async function syncActiveEvents(
           p_source_condition_id: compatibleMarket.conditionId,
           p_title: compatibleMarket.question || event.title,
           p_description: (event.description || "").slice(0, 2000),
-          p_category: mapCategory(event.category),
+          p_category: mapCategory(event.category, event.title, event.description),
           p_yes_price: prices.yes,
           p_no_price: prices.no,
           p_initial_liquidity_usd: liquidityUsd,

@@ -8,8 +8,6 @@ import {
   toBinaryCompatibleMarket,
 } from "@/lib/polymarket/gamma";
 
-const MAX_INITIAL_LIQUIDITY_USD = 500;
-const MIN_INITIAL_LIQUIDITY_USD = 50;
 // Resolution is intentionally checked on every scheduler invocation.
 // The primary scheduler runs once per minute.
 const RESOLUTION_CHECK_INTERVAL_MINUTES = 1;
@@ -36,6 +34,11 @@ function selectBestMarket(markets: GammaMarketLike[]) {
       (a, b) => (Number(b.volume) || 0) - (Number(a.volume) || 0),
     )[0] ?? null
   );
+}
+
+function calculateLiquidityUsd(marketVolume: number): number {
+  const multiplier = 0.05 + Math.random() * 0.1;
+  return Math.max(1, Math.round(marketVolume * multiplier * 100) / 100);
 }
 
 async function resolveRecentlyClosedPolymarketEvents(
@@ -144,7 +147,7 @@ async function syncActiveEvents(
 
     const { data: existingRows, error: existingError } = await admin
       .from("events")
-      .select("id, source_event_id, source_condition_id, title, description, category")
+      .select("id, source_event_id, source_condition_id, title, description, category, total_yes_pool, total_no_pool")
       .eq("source_platform", "polymarket")
       .in("source_event_id", sourceIds);
 
@@ -176,6 +179,8 @@ async function syncActiveEvents(
         return;
       }
 
+      const volume = Number(compatibleMarket.volume) || Number(event.volume) || 0;
+      const liquidityUsd = calculateLiquidityUsd(volume);
       const existing = existingBySourceId.get(event.id);
 
       if (existing) {
@@ -183,18 +188,14 @@ async function syncActiveEvents(
         const nextDescription = (event.description || "").slice(0, 2000);
         const nextCategory = mapCategory(event.category);
         const nextConditionId = compatibleMarket.conditionId;
+        const nextYesPool = Math.round((liquidityUsd / 2) * 100) / 100;
+        const nextNoPool = Math.round((liquidityUsd - nextYesPool) * 100) / 100;
 
         const changed =
           existing.title !== nextTitle ||
           existing.description !== nextDescription ||
           existing.category !== nextCategory ||
           existing.source_condition_id !== nextConditionId;
-
-        if (!changed) {
-          results.skipped.push(event.id);
-          results.skipReasons.unchangedExisting.push(event.id);
-          return;
-        }
 
         const { error } = await admin
           .from("events")
@@ -203,20 +204,16 @@ async function syncActiveEvents(
             description: nextDescription,
             category: nextCategory,
             source_condition_id: nextConditionId,
+            total_yes_pool: nextYesPool,
+            total_no_pool: nextNoPool,
           })
           .eq("id", existing.id);
 
         if (error) results.importErrors.push({ id: event.id, error: error.message });
-        else results.updated.push(event.id);
+        else if (changed) results.updated.push(event.id);
+        else results.skipped.push(event.id);
         return;
       }
-
-      const volume = Number(compatibleMarket.volume) || Number(event.volume) || 0;
-      const volumeBasedLiquidity = Math.round((volume / 10) * 100) / 100;
-      const initialLiquidity = Math.min(
-        Math.max(volumeBasedLiquidity, MIN_INITIAL_LIQUIDITY_USD),
-        MAX_INITIAL_LIQUIDITY_USD,
-      );
 
       try {
         const { data, error } = await admin.rpc("import_external_event", {
@@ -228,7 +225,7 @@ async function syncActiveEvents(
           p_category: mapCategory(event.category),
           p_yes_price: prices.yes,
           p_no_price: prices.no,
-          p_initial_liquidity_usd: initialLiquidity,
+          p_initial_liquidity_usd: liquidityUsd,
         });
 
         if (error) results.importErrors.push({ id: event.id, error: error.message });
@@ -350,7 +347,6 @@ async function runSync(request: Request) {
       resolved: resolved.length,
       needsReview: needsReview.length,
       resolutionErrors: resolutionErrors.length,
-      maxInitialLiquidityUsd: MAX_INITIAL_LIQUIDITY_USD,
       skipReasons: skipSummary,
       results: {
         imported: sync.imported,

@@ -13,19 +13,22 @@
   --no: #ef4444;
 }
 
+* { box-sizing: border-box; }
+html { overflow-x: hidden; }
 body {
   color: var(--foreground);
   background: var(--background);
   min-height: 100vh;
   scroll-behavior: smooth;
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.12), transparent),
-    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(16, 185, 129, 0.06), transparent);
+  background-image: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99,102,241,.09), transparent);
 }
 
-/* Polymarket-style horizontally scrollable market navigation.
-   Scoped to the sticky events navigation so other flex layouts are untouched. */
 @layer components {
+  /* Dense, dark Polymarket-like market surface. */
+  .pm-market-card { will-change: transform; }
+  .pm-market-card:active { transform: translateY(0) scale(.995); }
+
+  /* Horizontal market navigation: scrollable, but never show browser scrollbars. */
   .sticky .flex.flex-wrap.gap-2 {
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -35,43 +38,55 @@ body {
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
     min-width: 0;
+    scroll-behavior: smooth;
   }
+  .sticky .flex.flex-wrap.gap-2::-webkit-scrollbar { display: none; width: 0; height: 0; }
+  .sticky .flex.flex-wrap.gap-2 > a { flex: 0 0 auto; white-space: nowrap; }
+  .sticky .mt-3 { min-width: 0; }
+  .sticky .mt-3 .flex.flex-wrap.gap-2 { padding-bottom: 2px; }
 
-  .sticky .flex.flex-wrap.gap-2::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    height: 0;
+  /* Make the existing page header much tighter, like a trading terminal. */
+  .border-b.bg-gradient-to-b { background: #0b0b0f !important; }
+  .border-b.bg-gradient-to-b > div { padding-top: 1.5rem !important; padding-bottom: 1.25rem !important; }
+  .border-b.bg-gradient-to-b h1 { letter-spacing: -.035em; }
+
+  /* Navigation feels like a single dark control surface rather than two rows of cards. */
+  .sticky.top-16 {
+    background: rgba(11,11,15,.94) !important;
+    border-color: rgba(63,63,70,.55) !important;
+    backdrop-filter: blur(16px) saturate(130%);
   }
+  .sticky.top-16 > div { padding-top: .65rem !important; padding-bottom: .65rem !important; }
+  .sticky.top-16 a { transition: color .16s ease, background-color .16s ease, border-color .16s ease, transform .16s ease; }
+  .sticky.top-16 a:hover { transform: translateY(-1px); }
+  .sticky.top-16 .border-t { border-color: rgba(63,63,70,.4) !important; }
 
-  .sticky .flex.flex-wrap.gap-2 > a {
-    flex: 0 0 auto;
-    white-space: nowrap;
+  /* Search/filter controls: compact and low-contrast. */
+  input[aria-label="Search markets"] {
+    background: #151519 !important;
+    border-color: #29292f !important;
+    border-radius: .65rem !important;
   }
+  input[aria-label="Search markets"]:focus { border-color: #52525b !important; box-shadow: 0 0 0 2px rgba(82,82,91,.12); }
 
-  .sticky .mt-3 {
-    min-width: 0;
-  }
+  /* Existing EventCard grid remains functional; reduce visual bulk around it. */
+  .pm-market-card h3 { overflow-wrap: anywhere; }
 
-  .sticky .mt-3 .flex.flex-wrap.gap-2 {
-    padding-bottom: 2px;
+  @media (max-width: 640px) {
+    .pm-market-card > div:first-child { min-height: 0; padding: .85rem; }
+    .pm-market-card > div:first-child > div:last-child { width: 112px; }
+    .pm-market-card > div:first-child > div:last-child .text-xl { font-size: 1rem; line-height: 1.2; }
+    .pm-market-card > div:first-child > div:last-child .text-right { display: none; }
+    .pm-market-card > div:first-child > div:last-child .flex { justify-content: flex-start; }
+    .pm-market-card .border-t { padding-left: .85rem; padding-right: .85rem; }
   }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-
+  .text-balance { text-wrap: balance; }
   @keyframes marketing-marquee {
-    0% {
-      transform: translateX(0);
-    }
-    100% {
-      transform: translateX(-50%);
-    }
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
   }
-
-  .marketing-marquee {
-    animation: marketing-marquee 40s linear infinite;
-  }
+  .marketing-marquee { animation: marketing-marquee 40s linear infinite; }
 }

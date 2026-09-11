@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { EventCard } from "@/components/EventCard";
-import { Flame, TrendingUp, CheckCircle2, LayoutGrid, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { MarketingTrustStrip } from "@/components/MarketingTrust";
+import { Flame, CheckCircle2, LayoutGrid, Search, X, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import type { EventStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -77,8 +76,6 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
   if (searchQuery) eventsQuery = eventsQuery.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,category.ilike.%${searchQuery}%`);
   const { data: events, count: eventsCount, error: eventsError } = await eventsQuery;
 
-  // Navigation counts are computed in one SQL call instead of 50+ concurrent
-  // HEAD requests. This prevents Supabase connection-pool exhaustion.
   const { data: navData, error: navError } = await supabase.rpc("get_market_navigation_counts");
   const nav = (navData ?? { main: {}, topics: {} }) as { main: Record<string, number>; topics: Record<string, number> };
   const activeCount = Number(nav.main.All ?? 0);
@@ -94,9 +91,59 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
     { id: "all" as const, label: "All markets", count: allMarketsCount, icon: <LayoutGrid className="h-4 w-4" /> },
   ];
 
-  return <div className="min-h-screen bg-[var(--background)]">
-    <div className="border-b border-[var(--card-border)] bg-gradient-to-b from-indigo-950/40 to-transparent"><div className="mx-auto max-w-7xl px-4 py-8 md:py-10"><div className="flex items-center gap-2 mb-2"><Flame className="h-5 w-5 text-orange-400" /><span className="text-sm font-medium text-orange-400">Live Prediction Markets</span></div><div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between"><div><h1 className="text-3xl md:text-4xl font-black text-white mb-2">Markets</h1><p className="text-zinc-400 max-w-xl">Trade on real-world outcomes. Buy Yes or No — prices move with the crowd.</p></div><span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-sm text-emerald-400"><TrendingUp className="h-4 w-4" /> {activeCount} active</span></div><MarketingTrustStrip className="mt-6" /></div></div>
-    <div className="sticky top-16 z-40 border-b border-[var(--card-border)] bg-[var(--background)]/95 backdrop-blur"><div className="mx-auto max-w-7xl px-4 py-3"><div className="flex flex-wrap gap-2">{MAIN_CATEGORIES.map(c => { const count = Number(nav.main[c.label] ?? 0); const selected = (c.label === "All" && !selectedCategory) || selectedCategory?.label === c.label; return <Link key={c.label} href={buildUrl(statusFilter, c.label === "All" ? undefined : c.label, undefined, searchQuery)} className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-sm font-semibold ${selected ? "border-white bg-white text-black" : "border-zinc-700 bg-zinc-900/70 text-zinc-400 hover:border-zinc-500 hover:text-white"}`}><span>{c.label}</span><span className={`text-xs tabular-nums ${selected ? "text-zinc-600" : "text-zinc-500"}`}>{count}</span></Link>; })}</div><div className="mt-3 border-t border-zinc-800/80 pt-3"><div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-600">{selectedCategory ? `${selectedCategory.label} topics` : "Topics"}</div><div className="flex flex-wrap gap-2">{visibleTopics.map(t => { const selected = selectedTopic?.label === t.label; const count = Number(nav.topics[t.label] ?? 0); return <Link key={t.label} href={buildUrl(statusFilter, selectedCategory?.label, t.label, searchQuery)} className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${selected ? "border-indigo-400/60 bg-indigo-500/15 text-indigo-200" : "border-zinc-800 bg-zinc-950/50 text-zinc-500 hover:border-zinc-600 hover:text-zinc-200"}`}><span>{t.label}</span><span className="tabular-nums text-zinc-600">{count}</span></Link>; })}</div></div></div></div>
-    <div className="mx-auto max-w-7xl px-4 py-6 md:py-8"><div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"><div className="flex flex-wrap gap-2">{statusTabs.map(tab => <Link key={tab.id} href={buildUrl(tab.id, selectedCategory?.label, selectedTopic?.label, searchQuery)} className={`inline-flex items-center gap-2 rounded-lg border px-3.5 py-2 text-sm font-medium ${statusFilter === tab.id ? "border-white bg-white text-black" : "border-zinc-700 bg-zinc-900/60 text-zinc-400 hover:border-zinc-500 hover:text-white"}`}>{tab.icon}{tab.label}<span className="tabular-nums text-zinc-500">{tab.count}</span></Link>)}</div><form action="/events" method="get" className="w-full md:max-w-sm">{selectedCategory && <input type="hidden" name="category" value={selectedCategory.label} />}{selectedTopic && <input type="hidden" name="topic" value={selectedTopic.label} />}{statusFilter !== "active" && <input type="hidden" name="status" value={statusFilter} />}<div className="relative"><Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" /><input name="q" defaultValue={searchQuery} placeholder="Search markets..." aria-label="Search markets" className="w-full rounded-xl border border-zinc-700 bg-zinc-900/70 py-2.5 pl-11 pr-11 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-indigo-500" />{searchQuery && <Link href={buildUrl(statusFilter, selectedCategory?.label, selectedTopic?.label, "")} aria-label="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-500 hover:text-white"><X className="h-4 w-4" /></Link>}</div></form></div>{(selectedCategory || selectedTopic) && <div className="mt-5"><h2 className="text-lg font-bold text-white">{selectedTopic?.label ?? selectedCategory?.label}</h2><p className="text-sm text-zinc-500">{eventsCount ?? 0} matching markets</p></div>}{eventsError || navError ? <div className="mt-6 rounded-2xl border border-red-500/30 bg-red-500/5 p-8 text-center"><p className="font-semibold text-red-300">Markets are temporarily loading slowly.</p><p className="mt-1 text-sm text-zinc-500">Please refresh in a moment.</p></div> : !events?.length ? <div className="mt-6 rounded-2xl border border-dashed border-zinc-700 py-20 text-center"><p className="mb-3 text-4xl">📭</p><p className="font-medium text-zinc-400">No markets found</p></div> : <><div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">{events.map(event => <EventCard key={event.id} event={event} />)}</div>{totalPages > 1 && <div className="mt-10 flex items-center justify-between gap-4">{currentPage > 1 ? <Link href={buildUrl(statusFilter, selectedCategory?.label, selectedTopic?.label, searchQuery, currentPage - 1)} className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900/50 px-4 py-2 text-sm text-zinc-300"><ChevronLeft className="h-4 w-4" />Previous</Link> : <span /> }<span className="text-sm text-zinc-500">Page {currentPage} of {totalPages} · {eventsCount ?? 0} markets</span>{currentPage < totalPages ? <Link href={buildUrl(statusFilter, selectedCategory?.label, selectedTopic?.label, searchQuery, currentPage + 1)} className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900/50 px-4 py-2 text-sm text-zinc-300">Next<ChevronRight className="h-4 w-4" /></Link> : <span />}</div>}</>}</div>
-  </div>;
+  return (
+    <div className="min-h-screen bg-[var(--background)]">
+      <div className="border-b border-zinc-800/80 bg-[var(--background)]">
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
+          <div className="flex h-14 items-center gap-3 overflow-x-auto scrollbar-none">
+            <div className="flex shrink-0 items-center gap-1 text-xs font-semibold text-zinc-500"><Sparkles className="h-3.5 w-3.5" /> Markets</div>
+            <div className="h-5 w-px shrink-0 bg-zinc-800" />
+            {MAIN_CATEGORIES.map(c => {
+              const count = Number(nav.main[c.label] ?? 0);
+              const selected = (c.label === "All" && !selectedCategory) || selectedCategory?.label === c.label;
+              return <Link key={c.label} href={buildUrl(statusFilter, c.label === "All" ? undefined : c.label, undefined, searchQuery)} className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold transition-colors ${selected ? "bg-white text-black" : "text-zinc-400 hover:bg-zinc-900 hover:text-white"}`}><span>{c.label}</span><span className={`text-[11px] tabular-nums ${selected ? "text-zinc-500" : "text-zinc-600"}`}>{count}</span></Link>;
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="border-b border-zinc-800/80 bg-[var(--background)]">
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
+          <div className="flex min-h-12 items-center gap-2 overflow-x-auto py-2 scrollbar-none">
+            {visibleTopics.map(t => {
+              const selected = selectedTopic?.label === t.label;
+              const count = Number(nav.topics[t.label] ?? 0);
+              return <Link key={t.label} href={buildUrl(statusFilter, selectedCategory?.label, t.label, searchQuery)} className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${selected ? "border-zinc-500 bg-zinc-800 text-white" : "border-transparent text-zinc-500 hover:border-zinc-800 hover:bg-zinc-950 hover:text-zinc-200"}`}><span>{t.label}</span>{count > 0 && <span className="text-[10px] tabular-nums text-zinc-700">{count}</span>}</Link>;
+            })}
+          </div>
+        </div>
+      </div>
+
+      <main className="mx-auto max-w-[1400px] px-4 py-5 sm:px-6 md:py-6">
+        <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-950/50 p-1">
+            {statusTabs.map(tab => <Link key={tab.id} href={buildUrl(tab.id, selectedCategory?.label, selectedTopic?.label, searchQuery)} className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${statusFilter === tab.id ? "bg-zinc-800 text-white" : "text-zinc-500 hover:text-zinc-200"}`}>{tab.icon}{tab.label}<span className="tabular-nums text-zinc-600">{tab.count}</span></Link>)}
+          </div>
+          <form action="/events" method="get" className="w-full lg:max-w-md">
+            {selectedCategory && <input type="hidden" name="category" value={selectedCategory.label} />}
+            {selectedTopic && <input type="hidden" name="topic" value={selectedTopic.label} />}
+            {statusFilter !== "active" && <input type="hidden" name="status" value={statusFilter} />}
+            <div className="relative"><Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-600" /><input name="q" defaultValue={searchQuery} placeholder="Search markets" aria-label="Search markets" className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-10 pr-10 text-sm text-white outline-none transition focus:border-zinc-600 focus:ring-1 focus:ring-zinc-700 placeholder:text-zinc-600" />{searchQuery && <Link href={buildUrl(statusFilter, selectedCategory?.label, selectedTopic?.label, "")} aria-label="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-600 hover:text-white"><X className="h-4 w-4" /></Link>}</div>
+          </form>
+        </div>
+
+        <div className="mb-4 flex items-end justify-between gap-3">
+          <div><h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">{selectedTopic?.label ?? selectedCategory?.label ?? "All markets"}</h1><p className="mt-1 text-xs text-zinc-600">{eventsCount ?? 0} markets</p></div>
+          {eventsCount && eventsCount > PAGE_SIZE ? <span className="hidden text-xs text-zinc-600 sm:block">Page {currentPage} of {totalPages}</span> : null}
+        </div>
+
+        {eventsError || navError ? <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-10 text-center"><p className="font-semibold text-red-300">Markets are temporarily loading slowly.</p><p className="mt-1 text-sm text-zinc-600">Please refresh in a moment.</p></div> : !events?.length ? <div className="rounded-2xl border border-dashed border-zinc-800 py-24 text-center"><p className="mb-2 text-3xl">⌕</p><p className="font-medium text-zinc-400">No markets found</p></div> : <>
+          <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {events.map(event => <EventCard key={event.id} event={event} />)}
+          </div>
+          {totalPages > 1 && <div className="mt-8 flex items-center justify-between gap-4 border-t border-zinc-800 pt-5"><div>{currentPage > 1 ? <Link href={buildUrl(statusFilter, selectedCategory?.label, selectedTopic?.label, searchQuery, currentPage - 1)} className="inline-flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs font-semibold text-zinc-300 hover:border-zinc-700 hover:text-white"><ChevronLeft className="h-4 w-4" />Previous</Link> : null}</div><span className="text-xs text-zinc-600">Page {currentPage} of {totalPages}</span><div>{currentPage < totalPages ? <Link href={buildUrl(statusFilter, selectedCategory?.label, selectedTopic?.label, searchQuery, currentPage + 1)} className="inline-flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs font-semibold text-zinc-300 hover:border-zinc-700 hover:text-white">Next<ChevronRight className="h-4 w-4" /></Link> : null}</div></div>}
+        </>}
+      </main>
+    </div>
+  );
 }

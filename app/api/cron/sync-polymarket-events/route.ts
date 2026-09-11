@@ -18,14 +18,14 @@ type GammaMarketLike = Parameters<typeof getBinaryOutcomePrices>[0];
 function selectBestMarket(markets: GammaMarketLike[]) {
   return [...markets].sort((a,b) => (Number(b.volume)||0) - (Number(a.volume)||0))[0] ?? null;
 }
+
+// Preket needs a local liquidity value for its CPMM reserves. Keep it deterministic;
+// the old random value made the same market's reserves change on every cron run.
 function calculateLiquidityUsd(volume: number) {
-  const multiplier = 0.05 + Math.random() * 0.1;
-  return Math.max(1, Math.round(volume * multiplier * 100) / 100);
+  return Math.max(1, Math.round(volume * 0.075 * 100) / 100);
 }
 
 async function resolveRecentlyClosedPolymarketEvents(admin: ReturnType<typeof createAdminClient>) {
-  // Only inspect the small set of events returned by Polymarket's recently-closed feed.
-  // The old code loaded every active event (~26k) every minute, exhausting the DB pool.
   const closedEvents = await fetchRecentlyClosedEvents(50);
   const sourceIds = closedEvents.map(e => e.id).filter(Boolean);
   if (!sourceIds.length) return { resolved: [], needsReview: [], errors: [] as {id:string;error:string}[] };
@@ -67,7 +67,7 @@ async function resolveRecentlyClosedPolymarketEvents(admin: ReturnType<typeof cr
 async function syncActiveEvents(admin: ReturnType<typeof createAdminClient>, events: Awaited<ReturnType<typeof fetchNewTopEvents>>["events"]) {
   const results = { imported:[] as string[], updated:[] as string[], skipped:[] as string[], importErrors:[] as {id:string;error:string}[], skipReasons:{noBinaryMarket:[] as string[],noPrices:[] as string[],unchangedExisting:[] as string[],rpcReturnedFalse:[] as string[]} };
   const CONCURRENCY = 5;
-  const sourceIds = events.map(e => e.id);
+  const sourceIds = [...new Set(events.map(e => e.id))];
   const { data: existingRows, error } = await admin.from("events").select("id, source_event_id, source_condition_id, title, description, category").eq("source_platform","polymarket").in("source_event_id",sourceIds);
   if (error) throw new Error(error.message);
   const existingBySourceId = new Map((existingRows ?? []).map(row => [row.source_event_id as string, row]));
@@ -87,10 +87,13 @@ async function syncActiveEvents(admin: ReturnType<typeof createAdminClient>, eve
         const title = compatible.question || event.title;
         const description = (event.description || "").slice(0,2000);
         const category = mapCategory(event.category,event.title,event.description);
-        const yesPool = Math.round(liquidity/2*100)/100;
-        const noPool = Math.round((liquidity-yesPool)*100)/100;
+        // Keep local CPMM reserves aligned with the latest Polymarket Yes/No prices.
+        const yesPool = Math.max(0.01, Math.round(liquidity * prices.yes * 100) / 100);
+        const noPool = Math.max(0.01, Math.round(liquidity * prices.no * 100) / 100);
         const result = await admin.from("events").update({title,description,category,source_condition_id:compatible.conditionId,total_yes_pool:yesPool,total_no_pool:noPool,polymarket_source_volume_usd:Math.round(volume*100)/100}).eq("id",existing.id);
-        if (result.error) results.importErrors.push({id:event.id,error:result.error.message}); else if (existing.title !== title || existing.description !== description || existing.category !== category || existing.source_condition_id !== compatible.conditionId) results.updated.push(event.id); else results.skipped.push(event.id);
+        if (result.error) results.importErrors.push({id:event.id,error:result.error.message});
+        else if (existing.title !== title || existing.description !== description || existing.category !== category || existing.source_condition_id !== compatible.conditionId) results.updated.push(event.id);
+        else results.skipped.push(event.id);
         return;
       }
       const result = await admin.rpc("import_external_event", {p_source_platform:"polymarket",p_source_event_id:event.id,p_source_condition_id:compatible.conditionId,p_title:compatible.question || event.title,p_description:(event.description || "").slice(0,2000),p_category:mapCategory(event.category,event.title,event.description),p_yes_price:prices.yes,p_no_price:prices.no,p_initial_liquidity_usd:liquidity});
@@ -112,18 +115,29 @@ async function runSync(request: Request) {
   try {
     const {data:state,error:stateError}=await admin.from("sync_state").select("value").eq("key",POLYMARKET_CURSOR_KEY).maybeSingle();
     if(stateError) throw new Error(stateError.message);
-    const page=await fetchNewTopEvents(state?.value ?? null);
-    const events=page.events;
-    if(events.length===0){const r=await admin.from("sync_state").upsert({key:POLYMARKET_CURSOR_KEY,value:null,updated_at:new Date().toISOString()});if(r.error)throw new Error(r.error.message);}
+
+    // Always scan the newest page so newly-created/changed Polymarket markets are picked up
+    // immediately. In parallel with that, continue the cursor through older active markets so
+    // the whole catalogue still gets refreshed over time.
+    const newestPage = await fetchNewTopEvents(null);
+    const cursorPage = state?.value ? await fetchNewTopEvents(state.value) : newestPage;
+    const byId = new Map<string, (typeof newestPage.events)[number]>();
+    for (const event of newestPage.events) byId.set(event.id,event);
+    for (const event of cursorPage.events) byId.set(event.id,event);
+    const events = [...byId.values()];
+
     const sync=await syncActiveEvents(admin,events);
     const resolution=await resolveRecentlyClosedPolymarketEvents(admin);
-    if(events.length>0){const r=await admin.from("sync_state").upsert({key:POLYMARKET_CURSOR_KEY,value:page.nextCursor,updated_at:new Date().toISOString()});if(r.error)throw new Error(r.error.message);}
+    const nextCursor = cursorPage.nextCursor;
+    const r=await admin.from("sync_state").upsert({key:POLYMARKET_CURSOR_KEY,value:nextCursor,updated_at:new Date().toISOString()});
+    if(r.error)throw new Error(r.error.message);
+
     const durationMs=Date.now()-new Date(startedAt).getTime();
     const skipSummary=Object.fromEntries(Object.entries(sync.skipReasons).map(([k,v])=>[k,v.length]));
-    console.log(`[Polymarket Sync] ${new Date().toISOString()} | status=OK | fetched=${events.length} | imported=${sync.imported.length} | updated=${sync.updated.length} | skipped=${sync.skipped.length} | import_errors=${sync.importErrors.length} | resolved=${resolution.resolved.length} | needs_review=${resolution.needsReview.length} | resolution_errors=${resolution.errors.length} | duration_ms=${durationMs}`);
-    console.log(`[Polymarket Sync] cursor=${page.nextCursor ?? "null"}`);
+    console.log(`[Polymarket Sync] ${new Date().toISOString()} | status=OK | newest=${newestPage.events.length} | cursor_page=${cursorPage.events.length} | fetched_unique=${events.length} | imported=${sync.imported.length} | updated=${sync.updated.length} | skipped=${sync.skipped.length} | import_errors=${sync.importErrors.length} | resolved=${resolution.resolved.length} | needs_review=${resolution.needsReview.length} | resolution_errors=${resolution.errors.length} | duration_ms=${durationMs}`);
+    console.log(`[Polymarket Sync] cursor=${nextCursor ?? "null"}`);
     console.log(`[Polymarket Sync] skip_reasons=${JSON.stringify(skipSummary)}`);
-    return NextResponse.json({ok:true,startedAt,completedAt:new Date().toISOString(),cursor:page.nextCursor,imported:sync.imported.length,updated:sync.updated.length,skipped:sync.skipped.length,importErrors:sync.importErrors.length,resolutionChecked:true,resolved:resolution.resolved.length,needsReview:resolution.needsReview.length,resolutionErrors:resolution.errors.length,skipReasons:skipSummary});
+    return NextResponse.json({ok:true,startedAt,completedAt:new Date().toISOString(),cursor:nextCursor,newestScanned:newestPage.events.length,cursorPageScanned:cursorPage.events.length,fetched:events.length,imported:sync.imported.length,updated:sync.updated.length,skipped:sync.skipped.length,importErrors:sync.importErrors.length,resolutionChecked:true,resolved:resolution.resolved.length,needsReview:resolution.needsReview.length,resolutionErrors:resolution.errors.length,skipReasons:skipSummary});
   } catch(err) {
     const error=err instanceof Error?err.message:"Unknown error";
     console.error(`[Polymarket Sync] ${new Date().toISOString()} | status=FAILED | error=${error}`);

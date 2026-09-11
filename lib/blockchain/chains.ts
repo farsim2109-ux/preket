@@ -149,6 +149,13 @@ export const CHAINS: Record<NetworkId, ChainConfig> = {
   },
 };
 
+const PUBLIC_RPC_FALLBACKS: Record<NetworkId, string> = {
+  polygon: "https://polygon-rpc.com",
+  bsc: "https://bsc-dataseed.binance.org",
+  arbitrum: "https://arb1.arbitrum.io/rpc",
+  base: "https://mainnet.base.org",
+};
+
 export function getDepositAddress(): string {
   const unified = process.env.DEPOSIT_ADDRESS;
   if (unified && /^0x[a-fA-F0-9]{40}$/.test(unified)) return unified;
@@ -175,12 +182,14 @@ export function getRpcUrl(network: NetworkId): string {
   const fromEnv = process.env[chain.rpcEnv]?.trim();
   if (fromEnv) return fromEnv;
 
-  const apiKey = process.env.ALCHEMY_API_KEY;
+  const apiKey = process.env.ALCHEMY_API_KEY?.trim();
   if (apiKey) {
     return `https://${chain.alchemyNetwork}.g.alchemy.com/v2/${apiKey}`;
   }
 
-  throw new Error(`Missing ${chain.rpcEnv} (or ALCHEMY_API_KEY fallback)`);
+  // Last-resort public mainnet RPC. This keeps verification functional when
+  // a per-chain RPC or Alchemy key is missing from the deployment environment.
+  return PUBLIC_RPC_FALLBACKS[network];
 }
 
 export function getVisibleTokens(chain: ChainConfig): TokenConfig[] {

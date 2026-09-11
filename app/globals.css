@@ -5,10 +5,10 @@
 :root {
   --background: #0b0b0f;
   --foreground: #f4f4f5;
-  --card: #13131a;
-  --card-border: #2a2a35;
+  --card: #141416;
+  --card-border: #29292f;
   --muted: #71717a;
-  --accent: #3b82f6;
+  --accent: #6366f1;
   --yes: #22c55e;
   --no: #ef4444;
 }
@@ -20,79 +20,91 @@ body {
   background: var(--background);
   min-height: 100vh;
   scroll-behavior: smooth;
-  background-image: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99,102,241,.09), transparent);
+  background-image: radial-gradient(ellipse 80% 42% at 50% -12%, rgba(99,102,241,.075), transparent);
 }
 
 @layer components {
-  /* Dense, dark Polymarket-like market surface. */
-  .pm-market-card { will-change: transform; min-width: 0; }
-  .pm-market-card:active { transform: translateY(0) scale(.995); }
-
-  /* Four compact market cards per desktop row, while keeping the existing
-     responsive behavior on tablets and phones. This targets only the Events
-     page market grid and does not touch unrelated grids. */
-  .mt-6.grid.gap-5.md\:grid-cols-2.lg\:grid-cols-3 {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: .75rem;
+  /* Market-first surface: dense, calm and deliberately low-contrast. */
+  .pm-market-card {
+    min-width: 0;
+    will-change: transform;
+    backface-visibility: hidden;
   }
-  @media (min-width: 1024px) {
+  .pm-market-card:active { transform: translateY(0) scale(.995); }
+  .pm-market-card h3 { overflow-wrap: anywhere; }
+
+  /* Events market grid: 4 columns on desktop, 3 on large tablets, 2 on tablets, 1 on phones. */
+  .mt-6.grid.gap-5.md\:grid-cols-2.lg\:grid-cols-3 {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .875rem;
+  }
+  @media (min-width: 640px) {
+    .mt-6.grid.gap-5.md\:grid-cols-2.lg\:grid-cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (min-width: 900px) {
+    .mt-6.grid.gap-5.md\:grid-cols-2.lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (min-width: 1280px) {
     .mt-6.grid.gap-5.md\:grid-cols-2.lg\:grid-cols-3 {
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: .75rem;
+      gap: .875rem;
     }
   }
 
-  /* Horizontal market navigation: scrollable, but never show browser scrollbars. */
-  .sticky .flex.flex-wrap.gap-2 {
+  /* Keep the Events header compact instead of leaving a large empty hero area. */
+  .border-b.bg-gradient-to-b { background: #0b0b0f !important; }
+  .border-b.bg-gradient-to-b > div { padding-top: 1.5rem !important; padding-bottom: 1.1rem !important; }
+  .border-b.bg-gradient-to-b h1 { letter-spacing: -.04em; }
+
+  /* Polymarket-inspired horizontal controls: scroll instead of wrapping into giant side blocks. */
+  .sticky.top-16 {
+    background: rgba(11,11,15,.94) !important;
+    border-color: rgba(63,63,70,.5) !important;
+    backdrop-filter: blur(18px) saturate(135%);
+    -webkit-backdrop-filter: blur(18px) saturate(135%);
+  }
+  .sticky.top-16 > div { padding-top: .6rem !important; padding-bottom: .6rem !important; }
+  .sticky.top-16 .flex.flex-wrap.gap-2 {
     flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
+    min-width: 0;
+    padding-bottom: 2px;
     scrollbar-width: none;
     -ms-overflow-style: none;
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
-    min-width: 0;
     scroll-behavior: smooth;
   }
-  .sticky .flex.flex-wrap.gap-2::-webkit-scrollbar { display: none; width: 0; height: 0; }
-  .sticky .flex.flex-wrap.gap-2 > a { flex: 0 0 auto; white-space: nowrap; }
-  .sticky .mt-3 { min-width: 0; }
-  .sticky .mt-3 .flex.flex-wrap.gap-2 { padding-bottom: 2px; }
-
-  /* Make the existing page header much tighter, like a trading terminal. */
-  .border-b.bg-gradient-to-b { background: #0b0b0f !important; }
-  .border-b.bg-gradient-to-b > div { padding-top: 1.5rem !important; padding-bottom: 1.25rem !important; }
-  .border-b.bg-gradient-to-b h1 { letter-spacing: -.035em; }
-
-  /* Navigation feels like a single dark control surface rather than two rows of cards. */
-  .sticky.top-16 {
-    background: rgba(11,11,15,.94) !important;
-    border-color: rgba(63,63,70,.55) !important;
-    backdrop-filter: blur(16px) saturate(130%);
-  }
-  .sticky.top-16 > div { padding-top: .65rem !important; padding-bottom: .65rem !important; }
-  .sticky.top-16 a { transition: color .16s ease, background-color .16s ease, border-color .16s ease, transform .16s ease; }
+  .sticky.top-16 .flex.flex-wrap.gap-2::-webkit-scrollbar { display: none; width: 0; height: 0; }
+  .sticky.top-16 .flex.flex-wrap.gap-2 > a { flex: 0 0 auto; white-space: nowrap; }
+  .sticky.top-16 .border-t { border-color: rgba(63,63,70,.42) !important; }
+  .sticky.top-16 a { transition: color .16s ease, background-color .16s ease, border-color .16s ease, transform .16s ease, box-shadow .16s ease; }
   .sticky.top-16 a:hover { transform: translateY(-1px); }
-  .sticky.top-16 .border-t { border-color: rgba(63,63,70,.4) !important; }
 
-  /* Search/filter controls: compact and low-contrast. */
+  /* Search and filters read as one compact trading control row. */
   input[aria-label="Search markets"] {
     background: #151519 !important;
     border-color: #29292f !important;
-    border-radius: .65rem !important;
+    border-radius: .7rem !important;
   }
-  input[aria-label="Search markets"]:focus { border-color: #52525b !important; box-shadow: 0 0 0 2px rgba(82,82,91,.12); }
+  input[aria-label="Search markets"]:focus {
+    border-color: #52525b !important;
+    box-shadow: 0 0 0 2px rgba(99,102,241,.10);
+  }
 
-  /* Existing EventCard grid remains functional; reduce visual bulk around it. */
-  .pm-market-card h3 { overflow-wrap: anywhere; }
+  /* Remove accidental horizontal overflow from dense cards and controls. */
+  .pm-market-card > div { min-width: 0; }
 
-  @media (max-width: 640px) {
-    .pm-market-card > div:first-child { min-height: 0; padding: .85rem; }
-    .pm-market-card > div:first-child > div:last-child { width: 112px; }
-    .pm-market-card > div:first-child > div:last-child .text-xl { font-size: 1rem; line-height: 1.2; }
-    .pm-market-card > div:first-child > div:last-child .text-right { display: none; }
-    .pm-market-card > div:first-child > div:last-child .flex { justify-content: flex-start; }
+  @media (max-width: 639px) {
+    .pm-market-card > div:first-child { padding: .85rem; }
+    .pm-market-card h3 { min-height: 0; }
     .pm-market-card .border-t { padding-left: .85rem; padding-right: .85rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pm-market-card, .sticky.top-16 a { transition: none !important; }
+    html { scroll-behavior: auto; }
   }
 }
 

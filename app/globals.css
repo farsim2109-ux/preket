@@ -25,8 +25,22 @@ body {
 
 @layer components {
   /* Dense, dark Polymarket-like market surface. */
-  .pm-market-card { will-change: transform; }
+  .pm-market-card { will-change: transform; min-width: 0; }
   .pm-market-card:active { transform: translateY(0) scale(.995); }
+
+  /* Four compact market cards per desktop row, while keeping the existing
+     responsive behavior on tablets and phones. This targets only the Events
+     page market grid and does not touch unrelated grids. */
+  .mt-6.grid.gap-5.md\:grid-cols-2.lg\:grid-cols-3 {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: .75rem;
+  }
+  @media (min-width: 1024px) {
+    .mt-6.grid.gap-5.md\:grid-cols-2.lg\:grid-cols-3 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: .75rem;
+    }
+  }
 
   /* Horizontal market navigation: scrollable, but never show browser scrollbars. */
   .sticky .flex.flex-wrap.gap-2 {

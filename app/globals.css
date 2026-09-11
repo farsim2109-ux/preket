@@ -23,6 +23,40 @@ body {
     radial-gradient(ellipse 60% 40% at 100% 0%, rgba(16, 185, 129, 0.06), transparent);
 }
 
+/* Polymarket-style horizontally scrollable market navigation.
+   Scoped to the sticky events navigation so other flex layouts are untouched. */
+@layer components {
+  .sticky .flex.flex-wrap.gap-2 {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    min-width: 0;
+  }
+
+  .sticky .flex.flex-wrap.gap-2::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  .sticky .flex.flex-wrap.gap-2 > a {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .sticky .mt-3 {
+    min-width: 0;
+  }
+
+  .sticky .mt-3 .flex.flex-wrap.gap-2 {
+    padding-bottom: 2px;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

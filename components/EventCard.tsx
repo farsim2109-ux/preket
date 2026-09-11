@@ -5,15 +5,13 @@ import { getMarketPricesFromReserves } from "@/lib/market-math";
 import { getCategoryMeta } from "@/lib/market-ui";
 import { StatusPill } from "@/components/MarketUI";
 import { MarketOdds } from "@/components/MarketOdds";
-import { ArrowRight, Ban, CheckCircle2, Users } from "lucide-react";
+import { ArrowUpRight, Ban, CheckCircle2, Users } from "lucide-react";
 
 export function EventCard({ event }: { event: Event }) {
   const meta = getCategoryMeta(event.category);
-  const Icon = meta.icon;
   const isActive = event.status === "active";
   const isResolved = event.status === "resolved";
   const isCancelled = event.status === "cancelled";
-
   const yesPool = Number(event.total_yes_pool);
   const noPool = Number(event.total_no_pool);
   const cpmmRy = Number(event.cpmm_ry ?? yesPool + 500);
@@ -22,98 +20,57 @@ export function EventCard({ event }: { event: Event }) {
   const displayVolume = getDisplayVolume(event.polymarket_source_volume_usd, event.source_event_id ?? event.id);
 
   return (
-    <Link
-      href={`/events/${event.id}`}
-      className={`group block overflow-hidden rounded-2xl border bg-[var(--card)] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/40 ${
-        isActive ? meta.border : "border-zinc-700/60 opacity-80 hover:opacity-100"
-      }`}
-    >
-      <div
-        className={`relative h-20 border-b ${
-          isActive
-            ? `bg-gradient-to-br ${meta.gradient} ${meta.border}`
-            : "bg-zinc-900/80 border-zinc-700/50"
-        }`}
-      >
-        {!isActive && <div className="absolute inset-0 bg-zinc-950/40 z-10" />}
-        <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_0)] bg-[length:24px_24px]" />
-        <div className="relative z-20 flex h-full items-center justify-between px-4">
-          <span
-            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-bold backdrop-blur-sm ${
-              isActive ? `${meta.border} ${meta.bg} ${meta.accent}` : "border-zinc-600 bg-zinc-800 text-zinc-400"
-            }`}
-          >
-            <span className="text-base">{meta.emoji}</span>
-            <Icon className="h-3.5 w-3.5" />
-            {meta.label}
-          </span>
-          <StatusPill status={event.status} />
+    <Link href={`/events/${event.id}`} className="pm-market-card group block min-w-0 overflow-hidden rounded-xl border border-zinc-800/80 bg-[#141414] transition-[transform,border-color,background,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-zinc-600 hover:bg-[#181818] hover:shadow-[0_10px_30px_rgba(0,0,0,.28)]">
+      <div className="flex min-h-[118px] gap-3 p-4">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="mb-2 flex items-center gap-2 text-[11px] text-zinc-500">
+            <span className="truncate">{meta.label}</span>
+            <span className="text-zinc-700">•</span>
+            <span className="truncate">{isActive ? "Live market" : event.status}</span>
+            {isActive && <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,.7)]" />}
+          </div>
+          <h3 className="line-clamp-3 text-[15px] font-semibold leading-[1.35] tracking-[-0.01em] text-zinc-100 transition-colors group-hover:text-white">{event.title}</h3>
+          {event.description && <p className="mt-1 line-clamp-1 text-xs leading-5 text-zinc-500">{event.description}</p>}
         </div>
-      </div>
-
-      <div className="p-5">
-        <h3
-          className={`font-bold text-lg leading-snug line-clamp-2 mb-2 transition-colors ${
-            isActive ? "group-hover:text-white" : "text-zinc-400"
-          }`}
-        >
-          {event.title}
-        </h3>
-        <p className="text-sm text-zinc-500 line-clamp-2 mb-4">{event.description}</p>
 
         {isActive && (
-          <>
-            <div className="flex h-2.5 overflow-hidden rounded-full mb-3 ring-1 ring-white/5">
-              <div className="bg-gradient-to-r from-emerald-500 to-green-400" style={{ width: `${yesProb * 100}%` }} />
-              <div className="bg-gradient-to-r from-rose-500 to-red-400" style={{ width: `${noProb * 100}%` }} />
+          <div className="flex w-[148px] shrink-0 flex-col justify-center gap-2 sm:w-[178px]">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <div className="text-[10px] uppercase tracking-wider text-zinc-600">Yes</div>
+                <div className="text-xl font-semibold tabular-nums text-emerald-400">{Math.round(yesProb * 100)}%</div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] uppercase tracking-wider text-zinc-600">No</div>
+                <div className="text-xl font-semibold tabular-nums text-rose-400">{Math.round(noProb * 100)}%</div>
+              </div>
             </div>
-            <div className="mb-4">
-              <MarketOdds yesProb={yesProb} noProb={noProb} size="sm" />
+            <div className="h-1.5 overflow-hidden rounded-full bg-rose-500/70">
+              <div className="h-full rounded-full bg-emerald-500 transition-[width] duration-500" style={{ width: `${yesProb * 100}%` }} />
             </div>
-          </>
-        )}
-
-        {isResolved && (
-          <div
-            className={`rounded-xl border p-4 mb-4 flex items-center gap-3 ${
-              event.winning_outcome === "YES"
-                ? "border-emerald-500/30 bg-emerald-500/10"
-                : "border-red-500/30 bg-red-500/10"
-            }`}
-          >
-            <CheckCircle2
-              className={`h-5 w-5 shrink-0 ${event.winning_outcome === "YES" ? "text-emerald-400" : "text-red-400"}`}
-            />
-            <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Resolved</p>
-              <p
-                className={`font-bold ${event.winning_outcome === "YES" ? "text-emerald-400" : "text-red-400"}`}
-              >
-                {event.winning_outcome} won
-              </p>
-            </div>
+            <MarketOdds yesProb={yesProb} noProb={noProb} size="sm" />
           </div>
         )}
+      </div>
 
-        {isCancelled && (
-          <div className="rounded-xl border border-zinc-600/50 bg-zinc-800/50 p-4 mb-4 flex items-center gap-3">
-            <Ban className="h-5 w-5 text-zinc-500 shrink-0" />
-            <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Cancelled</p>
-              <p className="text-sm text-zinc-400">All bets refunded · Trading closed</p>
-            </div>
-          </div>
-        )}
-
-        <div className="flex items-center justify-between text-xs text-zinc-500">
-          <span className="inline-flex items-center gap-1">
-            <Users className="h-3.5 w-3.5" />
-            Vol. {formatUsd(displayVolume)}
-          </span>
-          <span className="inline-flex items-center gap-1 font-medium text-blue-400 group-hover:gap-2 transition-all">
-            {isActive ? "Trade" : "View"} <ArrowRight className="h-3.5 w-3.5" />
-          </span>
+      {isResolved && (
+        <div className={`mx-4 mb-3 flex items-center gap-2 rounded-lg border px-3 py-2 ${event.winning_outcome === "YES" ? "border-emerald-500/20 bg-emerald-500/5" : "border-rose-500/20 bg-rose-500/5"}`}>
+          <CheckCircle2 className={`h-4 w-4 ${event.winning_outcome === "YES" ? "text-emerald-400" : "text-rose-400"}`} />
+          <span className="text-xs text-zinc-500">Resolved</span>
+          <span className={`text-xs font-semibold ${event.winning_outcome === "YES" ? "text-emerald-400" : "text-rose-400"}`}>{event.winning_outcome} won</span>
         </div>
+      )}
+
+      {isCancelled && (
+        <div className="mx-4 mb-3 flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2">
+          <Ban className="h-4 w-4 text-zinc-500" />
+          <span className="text-xs text-zinc-500">Cancelled · Trading closed</span>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between border-t border-zinc-800/70 px-4 py-2.5 text-[11px] text-zinc-500">
+        <span className="inline-flex items-center gap-1.5"><Users className="h-3 w-3" />{formatUsd(displayVolume)} Vol.</span>
+        <span className="inline-flex items-center gap-1 text-zinc-400 transition-colors group-hover:text-white">Trade <ArrowUpRight className="h-3 w-3" /></span>
       </div>
     </Link>
   );

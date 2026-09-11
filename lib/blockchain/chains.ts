@@ -39,27 +39,9 @@ export const CHAINS: Record<NetworkId, ChainConfig> = {
     alchemyNetwork: "polygon-mainnet",
     requiredConfirmations: 15,
     tokens: [
-      {
-        id: "USDT",
-        symbol: "USDT",
-        address: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
-        decimals: 6,
-        coingeckoId: "tether",
-      },
-      {
-        id: "USDC",
-        symbol: "USDC",
-        address: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
-        decimals: 6,
-        coingeckoId: "usd-coin",
-      },
-      {
-        id: "USDC.e",
-        symbol: "USDC.e",
-        address: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
-        decimals: 6,
-        coingeckoId: "usd-coin",
-      },
+      { id: "USDT", symbol: "USDT", address: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F", decimals: 6, coingeckoId: "tether" },
+      { id: "USDC", symbol: "USDC", address: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359", decimals: 6, coingeckoId: "usd-coin" },
+      { id: "USDC.e", symbol: "USDC.e", address: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", decimals: 6, coingeckoId: "usd-coin" },
     ],
   },
   bsc: {
@@ -72,20 +54,8 @@ export const CHAINS: Record<NetworkId, ChainConfig> = {
     alchemyNetwork: "bnb-mainnet",
     requiredConfirmations: 15,
     tokens: [
-      {
-        id: "USDT",
-        symbol: "USDT",
-        address: "0x55d398326f99059fF775485246999027B3197955",
-        decimals: 18,
-        coingeckoId: "tether",
-      },
-      {
-        id: "USDC",
-        symbol: "USDC",
-        address: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
-        decimals: 18,
-        coingeckoId: "usd-coin",
-      },
+      { id: "USDT", symbol: "USDT", address: "0x55d398326f99059fF775485246999027B3197955", decimals: 18, coingeckoId: "tether" },
+      { id: "USDC", symbol: "USDC", address: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d", decimals: 18, coingeckoId: "usd-coin" },
     ],
   },
   arbitrum: {
@@ -98,27 +68,9 @@ export const CHAINS: Record<NetworkId, ChainConfig> = {
     alchemyNetwork: "arb-mainnet",
     requiredConfirmations: 30,
     tokens: [
-      {
-        id: "USDT",
-        symbol: "USDT",
-        address: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
-        decimals: 6,
-        coingeckoId: "tether",
-      },
-      {
-        id: "USDC",
-        symbol: "USDC",
-        address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
-        decimals: 6,
-        coingeckoId: "usd-coin",
-      },
-      {
-        id: "USDC.e",
-        symbol: "USDC.e",
-        address: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
-        decimals: 6,
-        coingeckoId: "usd-coin",
-      },
+      { id: "USDT", symbol: "USDT", address: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", decimals: 6, coingeckoId: "tether" },
+      { id: "USDC", symbol: "USDC", address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", decimals: 6, coingeckoId: "usd-coin" },
+      { id: "USDC.e", symbol: "USDC.e", address: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8", decimals: 6, coingeckoId: "usd-coin" },
     ],
   },
   base: {
@@ -131,20 +83,8 @@ export const CHAINS: Record<NetworkId, ChainConfig> = {
     alchemyNetwork: "base-mainnet",
     requiredConfirmations: 30,
     tokens: [
-      {
-        id: "USDT",
-        symbol: "USDT",
-        address: "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2",
-        decimals: 6,
-        coingeckoId: "tether",
-      },
-      {
-        id: "USDC",
-        symbol: "USDC",
-        address: "0x833589fCD6eDb6E08f4c7C32D6f7b9aD602a8433",
-        decimals: 6,
-        coingeckoId: "usd-coin",
-      },
+      { id: "USDT", symbol: "USDT", address: "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2", decimals: 6, coingeckoId: "tether" },
+      { id: "USDC", symbol: "USDC", address: "0x833589fCD6eDb6E08f4c7C32D4F71b54bdA02913", decimals: 6, coingeckoId: "usd-coin" },
     ],
   },
 };
@@ -183,12 +123,8 @@ export function getRpcUrl(network: NetworkId): string {
   if (fromEnv) return fromEnv;
 
   const apiKey = process.env.ALCHEMY_API_KEY?.trim();
-  if (apiKey) {
-    return `https://${chain.alchemyNetwork}.g.alchemy.com/v2/${apiKey}`;
-  }
+  if (apiKey) return `https://${chain.alchemyNetwork}.g.alchemy.com/v2/${apiKey}`;
 
-  // Last-resort public mainnet RPC. This keeps verification functional when
-  // a per-chain RPC or Alchemy key is missing from the deployment environment.
   return PUBLIC_RPC_FALLBACKS[network];
 }
 
